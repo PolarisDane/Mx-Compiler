@@ -4,11 +4,12 @@ Comment: (BlockComment | LineComment) -> skip;
 //has to be above lexer of comment if wanted to be skipped
 //or else it will only match comment and not skip it
 
-LineComment: '//' .*? NewLine;
+LineComment: '//' .*? (NewLine | EOF);
 BlockComment: '/*' .*? '*/';
 //using .*? must set an end or else it will stop immediately
 
 String: '"' .*? '"';
+//escape character not dealt with yet
 
 Int: 'int';
 Bool: 'bool';

@@ -17,7 +17,7 @@ block:
 defineClass:
 	Class Identifier LeftBrace
         (defineVarStmt
-        | defineConstructFunction
+        | defineFunction
         | defineConstructFunction)*
         //defineConstructFunction must be here for sake of random order when defining
     RightBrace Semicolon;
@@ -79,24 +79,30 @@ exprList: expression (Comma expression)*;
 funcExpr: Identifier LeftParenthesis exprList? RightParenthesis;
 
 expression:
-	RightParenthesis expression LeftParenthesis #wrap_expr
-    | funcExpr #func_expr
-    | New typename #new_expr
+	LeftParenthesis expression RightParenthesis #wrap_expr
+    | funcExpr #func_expr//maybe needed to be swapped with member_expr
+    | New typeprefix (LeftBracket expression RightBracket)* (LeftBracket RightBracket)* (LeftParenthesis RightParenthesis)* #new_expr
     | <assoc = right> (Increment | Decrement) expression #left_self_expr
     | expression (Increment | Decrement) #right_self_expr
     | <assoc = right> (Not | BitInv | Add | Sub) expression #single_expr
-    | expression RightBracket expression LeftBracket #array_expr
-    | expression Dot (Identifier | funcExpr)#member_expr
-    | l = expression (Mul | Div | Mod) r = expression #arith_expr
-    | l = expression (Add | Sub) r = expression #arith_expr
-    | l = expression (LeftShift | RightShift | BitAnd | BitOr | BitXor) r = expression #binary_arith_expr
-    | l = expression (Equal | NotEqual | Less | LessEqual | Greater | GreaterEqual) r = expression #logic_expr
-    | l = expression (And | Or) r = expression #logic_arith_expr
+    | expression LeftBracket expression RightBracket #array_expr
+    | expression Dot (Identifier | funcExpr) #member_expr
+    | l = expression (Mul | Div | Mod) r = expression #binary_expr
+    | l = expression (Add | Sub) r = expression #binary_expr
+    | l = expression (LeftShift | RightShift) r = expression #binary_expr
+    | l = expression (Less | LessEqual | Greater | GreaterEqual) r = expression #binary_expr
+    | l = expression (Equal | NotEqual) r = expression #binary_expr
+    | l = expression BitAnd r = expression #binary_expr
+    | l = expression BitOr r = expression #binary_expr
+    | l = expression BitXor r = expression #binary_expr
+    | l = expression And r = expression #binary_expr
+    | l = expression Or r = expression #binary_expr
     | <assoc = right> expression Question expression Colon expression #ternary_expr
     | <assoc = right> l = expression Assign r = expression #assign_expr
     | atom #atom_expr;
 
-typename: (basicType | Identifier) (LeftBracket expression RightBracket)* (LeftBracket RightBracket)*;
+typeprefix: (basicType | Identifier);
+typename: typeprefix (LeftBracket RightBracket)*;
 //matching array of more than one dimension
 
 atom: This | Null | Identifier | Number | String | True | False;
