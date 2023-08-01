@@ -4,12 +4,12 @@ import Utils.position;
 
 public class MemberExprNode extends ExprNode {
     public ExprNode obj;
-    public ExprNode member;
+    public String member;
 
-    MemberExprNode(position pos, ExprNode obj, ExprNode member) {
+    public FuncCallNode memberFunc;
+
+    public MemberExprNode(position pos) {
         super(pos);
-        this.obj = obj;
-        this.member = member;
     }
 
     @Override

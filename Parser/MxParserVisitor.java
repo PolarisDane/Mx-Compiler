@@ -1,4 +1,6 @@
 // Generated from ./Parser/MxParser.g4 by ANTLR 4.7.2
+package Parser;
+
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 
 /**
@@ -130,11 +132,11 @@ public interface MxParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitExprList(MxParser.ExprListContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MxParser#funcExpr}.
+	 * Visit a parse tree produced by {@link MxParser#funcCall}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitFuncExpr(MxParser.FuncExprContext ctx);
+	T visitFuncCall(MxParser.FuncCallContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code wrap_expr}
 	 * labeled alternative in {@link MxParser#expression}.

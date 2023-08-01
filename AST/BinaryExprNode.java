@@ -6,7 +6,7 @@ public class BinaryExprNode extends ExprNode {
     public ExprNode lop, rop;
     public String op;
 
-    BinaryExprNode(position pos, String op, ExprNode lop, ExprNode rop) {
+    public BinaryExprNode(position pos, String op, ExprNode lop, ExprNode rop) {
         super(pos);
         this.op = op;
         this.lop = lop;

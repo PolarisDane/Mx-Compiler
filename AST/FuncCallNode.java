@@ -2,11 +2,11 @@ package AST;
 
 import Utils.*;
 
-public class FuncExprNode extends ExprNode {
-    public ExprNode func;
+public class FuncCallNode extends ExprNode {
+    public String func;
     public ExprListNode args;
 
-    FuncExprNode(position pos, ExprNode func, ExprListNode args) {
+    public FuncCallNode(position pos, String func, ExprListNode args) {
         super(pos);
         this.func = func;
         this.args = args;

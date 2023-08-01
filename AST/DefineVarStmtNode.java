@@ -1,17 +1,17 @@
 package AST;
 
 import Utils.position;
+import Utils.Type;
+
+import java.util.ArrayList;
 
 public class DefineVarStmtNode extends StmtNode {
     public Type type;
-    public String var;
-    public ExprNode val;
+    public ArrayList<VarAssignStmtNode> assigns;
 
-    public DefineVarStmtNode(position pos, Type type, String var, ExprNode val) {
+    public DefineVarStmtNode(position pos) {
         super(pos);
-        this.type = type;
-        this.var = var;
-        this.val = val;
+        assigns = new ArrayList<>();
     }
 
     @Override

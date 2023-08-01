@@ -1,7 +1,7 @@
 package AST;
 
 public interface ASTVisitor {
-    void visit(FuncExprNode it);
+    void visit(FuncCallNode it);
     void visit(NewExprNode it);
     void visit(WrapExprNode it);
     void visit(ArrayExprNode it);
@@ -33,4 +33,7 @@ public interface ASTVisitor {
 
     void visit(SuiteNode it);
     void visit(BlockNode it);
+
+
+    void visit(RootNode it);
 }

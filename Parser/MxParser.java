@@ -1,4 +1,6 @@
 // Generated from ./Parser/MxParser.g4 by ANTLR 4.7.2
+package Parser;
+
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
@@ -31,14 +33,14 @@ public class MxParser extends Parser {
 		RULE_paramsList = 7, RULE_defineVarStmt = 8, RULE_varAssign = 9, RULE_exprStmt = 10, 
 		RULE_stmt = 11, RULE_ifStmt = 12, RULE_whileStmt = 13, RULE_forStmt = 14, 
 		RULE_continueStmt = 15, RULE_breakStmt = 16, RULE_returnStmt = 17, RULE_flowStmt = 18, 
-		RULE_exprList = 19, RULE_funcExpr = 20, RULE_expression = 21, RULE_typeprefix = 22, 
+		RULE_exprList = 19, RULE_funcCall = 20, RULE_expression = 21, RULE_typeprefix = 22, 
 		RULE_typename = 23, RULE_atom = 24;
 	private static String[] makeRuleNames() {
 		return new String[] {
 			"file_input", "basicType", "suite", "block", "defineClass", "defineFunction", 
 			"defineConstructFunction", "paramsList", "defineVarStmt", "varAssign", 
 			"exprStmt", "stmt", "ifStmt", "whileStmt", "forStmt", "continueStmt", 
-			"breakStmt", "returnStmt", "flowStmt", "exprList", "funcExpr", "expression", 
+			"breakStmt", "returnStmt", "flowStmt", "exprList", "funcCall", "expression", 
 			"typeprefix", "typename", "atom"
 		};
 	}
@@ -1525,35 +1527,35 @@ public class MxParser extends Parser {
 		return _localctx;
 	}
 
-	public static class FuncExprContext extends ParserRuleContext {
+	public static class FuncCallContext extends ParserRuleContext {
 		public TerminalNode Identifier() { return getToken(MxParser.Identifier, 0); }
 		public TerminalNode LeftParenthesis() { return getToken(MxParser.LeftParenthesis, 0); }
 		public TerminalNode RightParenthesis() { return getToken(MxParser.RightParenthesis, 0); }
 		public ExprListContext exprList() {
 			return getRuleContext(ExprListContext.class,0);
 		}
-		public FuncExprContext(ParserRuleContext parent, int invokingState) {
+		public FuncCallContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
-		@Override public int getRuleIndex() { return RULE_funcExpr; }
+		@Override public int getRuleIndex() { return RULE_funcCall; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof MxParserListener ) ((MxParserListener)listener).enterFuncExpr(this);
+			if ( listener instanceof MxParserListener ) ((MxParserListener)listener).enterFuncCall(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof MxParserListener ) ((MxParserListener)listener).exitFuncExpr(this);
+			if ( listener instanceof MxParserListener ) ((MxParserListener)listener).exitFuncCall(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof MxParserVisitor ) return ((MxParserVisitor<? extends T>)visitor).visitFuncExpr(this);
+			if ( visitor instanceof MxParserVisitor ) return ((MxParserVisitor<? extends T>)visitor).visitFuncCall(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
-	public final FuncExprContext funcExpr() throws RecognitionException {
-		FuncExprContext _localctx = new FuncExprContext(_ctx, getState());
-		enterRule(_localctx, 40, RULE_funcExpr);
+	public final FuncCallContext funcCall() throws RecognitionException {
+		FuncCallContext _localctx = new FuncCallContext(_ctx, getState());
+		enterRule(_localctx, 40, RULE_funcCall);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
@@ -1625,8 +1627,8 @@ public class MxParser extends Parser {
 		}
 		public TerminalNode Dot() { return getToken(MxParser.Dot, 0); }
 		public TerminalNode Identifier() { return getToken(MxParser.Identifier, 0); }
-		public FuncExprContext funcExpr() {
-			return getRuleContext(FuncExprContext.class,0);
+		public FuncCallContext funcCall() {
+			return getRuleContext(FuncCallContext.class,0);
 		}
 		public Member_exprContext(ExpressionContext ctx) { copyFrom(ctx); }
 		@Override
@@ -1645,6 +1647,7 @@ public class MxParser extends Parser {
 	}
 	public static class Binary_exprContext extends ExpressionContext {
 		public ExpressionContext l;
+		public Token op;
 		public ExpressionContext r;
 		public List<ExpressionContext> expression() {
 			return getRuleContexts(ExpressionContext.class);
@@ -1686,8 +1689,8 @@ public class MxParser extends Parser {
 		}
 	}
 	public static class Func_exprContext extends ExpressionContext {
-		public FuncExprContext funcExpr() {
-			return getRuleContext(FuncExprContext.class,0);
+		public FuncCallContext funcCall() {
+			return getRuleContext(FuncCallContext.class,0);
 		}
 		public Func_exprContext(ExpressionContext ctx) { copyFrom(ctx); }
 		@Override
@@ -1772,6 +1775,7 @@ public class MxParser extends Parser {
 		}
 	}
 	public static class Right_self_exprContext extends ExpressionContext {
+		public Token op;
 		public ExpressionContext expression() {
 			return getRuleContext(ExpressionContext.class,0);
 		}
@@ -1812,6 +1816,7 @@ public class MxParser extends Parser {
 		}
 	}
 	public static class Left_self_exprContext extends ExpressionContext {
+		public Token op;
 		public ExpressionContext expression() {
 			return getRuleContext(ExpressionContext.class,0);
 		}
@@ -1857,6 +1862,7 @@ public class MxParser extends Parser {
 		}
 	}
 	public static class Single_exprContext extends ExpressionContext {
+		public Token op;
 		public ExpressionContext expression() {
 			return getRuleContext(ExpressionContext.class,0);
 		}
@@ -1943,7 +1949,7 @@ public class MxParser extends Parser {
 				_ctx = _localctx;
 				_prevctx = _localctx;
 				setState(212);
-				funcExpr();
+				funcCall();
 				}
 				break;
 			case 3:
@@ -2019,9 +2025,10 @@ public class MxParser extends Parser {
 				_ctx = _localctx;
 				_prevctx = _localctx;
 				setState(238);
+				((Left_self_exprContext)_localctx).op = _input.LT(1);
 				_la = _input.LA(1);
 				if ( !(_la==Increment || _la==Decrement) ) {
-				_errHandler.recoverInline(this);
+					((Left_self_exprContext)_localctx).op = (Token)_errHandler.recoverInline(this);
 				}
 				else {
 					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
@@ -2038,9 +2045,10 @@ public class MxParser extends Parser {
 				_ctx = _localctx;
 				_prevctx = _localctx;
 				setState(240);
+				((Single_exprContext)_localctx).op = _input.LT(1);
 				_la = _input.LA(1);
 				if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << Not) | (1L << BitInv) | (1L << Add) | (1L << Sub))) != 0)) ) {
-				_errHandler.recoverInline(this);
+					((Single_exprContext)_localctx).op = (Token)_errHandler.recoverInline(this);
 				}
 				else {
 					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
@@ -2081,9 +2089,10 @@ public class MxParser extends Parser {
 						setState(245);
 						if (!(precpred(_ctx, 13))) throw new FailedPredicateException(this, "precpred(_ctx, 13)");
 						setState(246);
+						((Binary_exprContext)_localctx).op = _input.LT(1);
 						_la = _input.LA(1);
 						if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << Mul) | (1L << Div) | (1L << Mod))) != 0)) ) {
-						_errHandler.recoverInline(this);
+							((Binary_exprContext)_localctx).op = (Token)_errHandler.recoverInline(this);
 						}
 						else {
 							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
@@ -2102,9 +2111,10 @@ public class MxParser extends Parser {
 						setState(248);
 						if (!(precpred(_ctx, 12))) throw new FailedPredicateException(this, "precpred(_ctx, 12)");
 						setState(249);
+						((Binary_exprContext)_localctx).op = _input.LT(1);
 						_la = _input.LA(1);
 						if ( !(_la==Add || _la==Sub) ) {
-						_errHandler.recoverInline(this);
+							((Binary_exprContext)_localctx).op = (Token)_errHandler.recoverInline(this);
 						}
 						else {
 							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
@@ -2123,9 +2133,10 @@ public class MxParser extends Parser {
 						setState(251);
 						if (!(precpred(_ctx, 11))) throw new FailedPredicateException(this, "precpred(_ctx, 11)");
 						setState(252);
+						((Binary_exprContext)_localctx).op = _input.LT(1);
 						_la = _input.LA(1);
 						if ( !(_la==LeftShift || _la==RightShift) ) {
-						_errHandler.recoverInline(this);
+							((Binary_exprContext)_localctx).op = (Token)_errHandler.recoverInline(this);
 						}
 						else {
 							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
@@ -2144,9 +2155,10 @@ public class MxParser extends Parser {
 						setState(254);
 						if (!(precpred(_ctx, 10))) throw new FailedPredicateException(this, "precpred(_ctx, 10)");
 						setState(255);
+						((Binary_exprContext)_localctx).op = _input.LT(1);
 						_la = _input.LA(1);
 						if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << Less) | (1L << Greater) | (1L << LessEqual) | (1L << GreaterEqual))) != 0)) ) {
-						_errHandler.recoverInline(this);
+							((Binary_exprContext)_localctx).op = (Token)_errHandler.recoverInline(this);
 						}
 						else {
 							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
@@ -2165,9 +2177,10 @@ public class MxParser extends Parser {
 						setState(257);
 						if (!(precpred(_ctx, 9))) throw new FailedPredicateException(this, "precpred(_ctx, 9)");
 						setState(258);
+						((Binary_exprContext)_localctx).op = _input.LT(1);
 						_la = _input.LA(1);
 						if ( !(_la==Equal || _la==NotEqual) ) {
-						_errHandler.recoverInline(this);
+							((Binary_exprContext)_localctx).op = (Token)_errHandler.recoverInline(this);
 						}
 						else {
 							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
@@ -2186,7 +2199,7 @@ public class MxParser extends Parser {
 						setState(260);
 						if (!(precpred(_ctx, 8))) throw new FailedPredicateException(this, "precpred(_ctx, 8)");
 						setState(261);
-						match(BitAnd);
+						((Binary_exprContext)_localctx).op = match(BitAnd);
 						setState(262);
 						((Binary_exprContext)_localctx).r = expression(9);
 						}
@@ -2199,7 +2212,7 @@ public class MxParser extends Parser {
 						setState(263);
 						if (!(precpred(_ctx, 7))) throw new FailedPredicateException(this, "precpred(_ctx, 7)");
 						setState(264);
-						match(BitOr);
+						((Binary_exprContext)_localctx).op = match(BitOr);
 						setState(265);
 						((Binary_exprContext)_localctx).r = expression(8);
 						}
@@ -2212,7 +2225,7 @@ public class MxParser extends Parser {
 						setState(266);
 						if (!(precpred(_ctx, 6))) throw new FailedPredicateException(this, "precpred(_ctx, 6)");
 						setState(267);
-						match(BitXor);
+						((Binary_exprContext)_localctx).op = match(BitXor);
 						setState(268);
 						((Binary_exprContext)_localctx).r = expression(7);
 						}
@@ -2225,7 +2238,7 @@ public class MxParser extends Parser {
 						setState(269);
 						if (!(precpred(_ctx, 5))) throw new FailedPredicateException(this, "precpred(_ctx, 5)");
 						setState(270);
-						match(And);
+						((Binary_exprContext)_localctx).op = match(And);
 						setState(271);
 						((Binary_exprContext)_localctx).r = expression(6);
 						}
@@ -2238,7 +2251,7 @@ public class MxParser extends Parser {
 						setState(272);
 						if (!(precpred(_ctx, 4))) throw new FailedPredicateException(this, "precpred(_ctx, 4)");
 						setState(273);
-						match(Or);
+						((Binary_exprContext)_localctx).op = match(Or);
 						setState(274);
 						((Binary_exprContext)_localctx).r = expression(5);
 						}
@@ -2279,9 +2292,10 @@ public class MxParser extends Parser {
 						setState(284);
 						if (!(precpred(_ctx, 18))) throw new FailedPredicateException(this, "precpred(_ctx, 18)");
 						setState(285);
+						((Right_self_exprContext)_localctx).op = _input.LT(1);
 						_la = _input.LA(1);
 						if ( !(_la==Increment || _la==Decrement) ) {
-						_errHandler.recoverInline(this);
+							((Right_self_exprContext)_localctx).op = (Token)_errHandler.recoverInline(this);
 						}
 						else {
 							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
@@ -2324,7 +2338,7 @@ public class MxParser extends Parser {
 						case 2:
 							{
 							setState(294);
-							funcExpr();
+							funcCall();
 							}
 							break;
 						}

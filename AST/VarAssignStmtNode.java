@@ -3,10 +3,11 @@ package AST;
 import java.util.ArrayList;
 
 import Utils.position;
+import Utils.Type;
 
 public class VarAssignStmtNode extends StmtNode {
-    Type type;
-    ArrayList<VarAssignStmtNode> assign;
+    public String assignTo;
+    public ExprNode assignVal;
 
     public VarAssignStmtNode(position pos) {
         super(pos);

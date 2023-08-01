@@ -7,9 +7,8 @@ public class IfStmtNode extends StmtNode {
     public SuiteNode trueThenWork;
     public SuiteNode falseThenWork;
 
-    public IfStmtNode(position pos, ExprNode condition) {
+    public IfStmtNode(position pos) {
         super(pos);
-        this.condition = condition;
     }
 
     @Override

@@ -3,6 +3,7 @@ package AST;
 import java.util.ArrayList;
 
 import Utils.position;
+import Utils.Type;
 
 public class ParamsListNode extends ASTNode {
     public ArrayList<Type> types;

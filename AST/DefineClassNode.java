@@ -10,10 +10,9 @@ public class DefineClassNode extends ASTNode {
     public DefineConstructFunctionNode constructor;
     public ArrayList<DefineFunctionNode> functions;
 
-    public DefineClassNode(position pos, String identifier, DefineConstructFunctionNode constructor) {
+    public DefineClassNode(position pos, String identifier) {
         super(pos);
         this.identifier = identifier;
-        this.constructor = constructor;
         this.vars = new ArrayList<>();
         this.functions = new ArrayList<>();
     }

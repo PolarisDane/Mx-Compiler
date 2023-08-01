@@ -74,27 +74,27 @@ flowStmt: continueStmt | breakStmt | returnStmt;
 
 exprList: expression (Comma expression)*;
 
-funcExpr: Identifier LeftParenthesis exprList? RightParenthesis;
+funcCall: Identifier LeftParenthesis exprList? RightParenthesis;
 
 expression:
 	LeftParenthesis expression RightParenthesis #wrap_expr
-    | funcExpr #func_expr//maybe needed to be swapped with member_expr
+    | funcCall #func_expr//maybe needed to be swapped with member_expr
     | New typeprefix (LeftBracket expression RightBracket)* (LeftBracket RightBracket)* (LeftParenthesis RightParenthesis)* #new_expr
-    | expression (Increment | Decrement) #right_self_expr
-    | <assoc = right> (Increment | Decrement) expression #left_self_expr
-    | <assoc = right> (Not | BitInv | Add | Sub) expression #single_expr
+    | expression op = (Increment | Decrement) #right_self_expr
+    | <assoc = right> op = (Increment | Decrement) expression #left_self_expr
+    | <assoc = right> op = (Not | BitInv | Add | Sub) expression #single_expr
     | expression LeftBracket expression RightBracket #array_expr
-    | expression Dot (Identifier | funcExpr) #member_expr
-    | l = expression (Mul | Div | Mod) r = expression #binary_expr
-    | l = expression (Add | Sub) r = expression #binary_expr
-    | l = expression (LeftShift | RightShift) r = expression #binary_expr
-    | l = expression (Less | LessEqual | Greater | GreaterEqual) r = expression #binary_expr
-    | l = expression (Equal | NotEqual) r = expression #binary_expr
-    | l = expression BitAnd r = expression #binary_expr
-    | l = expression BitOr r = expression #binary_expr
-    | l = expression BitXor r = expression #binary_expr
-    | l = expression And r = expression #binary_expr
-    | l = expression Or r = expression #binary_expr
+    | expression Dot (Identifier | funcCall) #member_expr
+    | l = expression op = (Mul | Div | Mod) r = expression #binary_expr
+    | l = expression op = (Add | Sub) r = expression #binary_expr
+    | l = expression op = (LeftShift | RightShift) r = expression #binary_expr
+    | l = expression op = (Less | LessEqual | Greater | GreaterEqual) r = expression #binary_expr
+    | l = expression op = (Equal | NotEqual) r = expression #binary_expr
+    | l = expression op = BitAnd r = expression #binary_expr
+    | l = expression op = BitOr r = expression #binary_expr
+    | l = expression op = BitXor r = expression #binary_expr
+    | l = expression op = And r = expression #binary_expr
+    | l = expression op = Or r = expression #binary_expr
     | <assoc = right> expression Question expression Colon expression #ternary_expr
     | <assoc = right> l = expression Assign r = expression #assign_expr
     | atom #atom_expr;

@@ -9,9 +9,8 @@ public class ForStmtNode extends StmtNode {
     public ExprNode step;
     public SuiteNode work;
 
-    public ForStmtNode(position pos, ExprNode condition) {
+    public ForStmtNode(position pos) {
         super(pos);
-        this.condition = condition;
     }
 
     @Override

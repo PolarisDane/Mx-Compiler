@@ -6,9 +6,8 @@ public class WhileStmtNode extends StmtNode {
     public ExprNode condition;
     public SuiteNode work;
 
-    public WhileStmtNode(position pos, ExprNode condition) {
+    public WhileStmtNode(position pos) {
         super(pos);
-        this.condition = condition;
     }
 
     @Override

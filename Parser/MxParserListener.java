@@ -1,4 +1,6 @@
 // Generated from ./Parser/MxParser.g4 by ANTLR 4.7.2
+package Parser;
+
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
 /**
@@ -207,15 +209,15 @@ public interface MxParserListener extends ParseTreeListener {
 	 */
 	void exitExprList(MxParser.ExprListContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link MxParser#funcExpr}.
+	 * Enter a parse tree produced by {@link MxParser#funcCall}.
 	 * @param ctx the parse tree
 	 */
-	void enterFuncExpr(MxParser.FuncExprContext ctx);
+	void enterFuncCall(MxParser.FuncCallContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link MxParser#funcExpr}.
+	 * Exit a parse tree produced by {@link MxParser#funcCall}.
 	 * @param ctx the parse tree
 	 */
-	void exitFuncExpr(MxParser.FuncExprContext ctx);
+	void exitFuncCall(MxParser.FuncCallContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code wrap_expr}
 	 * labeled alternative in {@link MxParser#expression}.
