@@ -5,11 +5,11 @@ import java.util.ArrayList;
 import Utils.position;
 
 public class SuiteNode extends ASTNode {
-    public ArrayList<StmtNode> stmt;
+    public ArrayList<StmtNode> stmts;
 
     public SuiteNode(position pos) {
         super(pos);
-        this.stmt = new ArrayList<>();
+        this.stmts = new ArrayList<>();
     }
     
     @Override

@@ -30,9 +30,7 @@ defineConstructFunction:
     Identifier LeftParenthesis RightParenthesis
         block;
 
-declareVar: typename Identifier;
-
-paramsList: declareVar (Comma declareVar)*;
+paramsList: typename Identifier (Comma typename Identifier)*;
 
 defineVarStmt: typename varAssign (Comma varAssign)* Semicolon;
 
@@ -82,8 +80,8 @@ expression:
 	LeftParenthesis expression RightParenthesis #wrap_expr
     | funcExpr #func_expr//maybe needed to be swapped with member_expr
     | New typeprefix (LeftBracket expression RightBracket)* (LeftBracket RightBracket)* (LeftParenthesis RightParenthesis)* #new_expr
-    | <assoc = right> (Increment | Decrement) expression #left_self_expr
     | expression (Increment | Decrement) #right_self_expr
+    | <assoc = right> (Increment | Decrement) expression #left_self_expr
     | <assoc = right> (Not | BitInv | Add | Sub) expression #single_expr
     | expression LeftBracket expression RightBracket #array_expr
     | expression Dot (Identifier | funcExpr) #member_expr

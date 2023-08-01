@@ -6,7 +6,13 @@ public interface ASTVisitor {
     void visit(WrapExprNode it);
     void visit(ArrayExprNode it);
     void visit(MemberExprNode it);
+    void visit(RightSelfExprNode it);
+    void visit(LeftSelfExprNode it);
+    void visit(SingleExprNode it);
     void visit(BinaryExprNode it);
+    void visit(TernaryExprNode it);
+    void visit(AssignExprNode it);
+    void visit(AtomExprNode it);
     void visit(ExprListNode it);
 
     void visit(ExprStmtNode it);
@@ -19,6 +25,11 @@ public interface ASTVisitor {
     void visit(ReturnStmtNode it);
     void visit(DefineVarStmtNode it);
     void visit(VarAssignStmtNode it);
+
+    void visit(ParamsListNode it);
+    void visit(DefineClassNode it);
+    void visit(DefineConstructFunctionNode it);
+    void visit(DefineFunctionNode it);
 
     void visit(SuiteNode it);
     void visit(BlockNode it);

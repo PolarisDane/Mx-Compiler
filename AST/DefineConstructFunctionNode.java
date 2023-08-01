@@ -4,10 +4,10 @@ import java.util.ArrayList;
 
 import Utils.position;
 
-public class BlockNode extends ASTNode {
+public class DefineConstructFunctionNode extends ASTNode {
     public ArrayList<StmtNode> stmts;
 
-    public BlockNode(position pos) {
+    public DefineConstructFunctionNode(position pos) {
         super(pos);
         this.stmts = new ArrayList<>();
     }

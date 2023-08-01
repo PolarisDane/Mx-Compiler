@@ -77,16 +77,6 @@ public interface MxParserListener extends ParseTreeListener {
 	 */
 	void exitDefineConstructFunction(MxParser.DefineConstructFunctionContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link MxParser#declareVar}.
-	 * @param ctx the parse tree
-	 */
-	void enterDeclareVar(MxParser.DeclareVarContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link MxParser#declareVar}.
-	 * @param ctx the parse tree
-	 */
-	void exitDeclareVar(MxParser.DeclareVarContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link MxParser#paramsList}.
 	 * @param ctx the parse tree
 	 */
