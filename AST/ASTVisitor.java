@@ -34,6 +34,7 @@ public interface ASTVisitor {
     void visit(SuiteNode it);
     void visit(BlockNode it);
 
+    void visit(TypeNameNode it);
 
     void visit(RootNode it);
 }

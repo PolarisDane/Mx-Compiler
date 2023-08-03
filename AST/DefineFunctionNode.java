@@ -2,6 +2,7 @@ package AST;
 
 import java.util.ArrayList;
 
+import Utils.Type;
 import Utils.position;
 
 public class DefineFunctionNode extends ASTNode {
@@ -9,10 +10,11 @@ public class DefineFunctionNode extends ASTNode {
     public ParamsListNode paramsList;
     public ArrayList<StmtNode> stmts;
 
-    public DefineFunctionNode(position pos, String funcName, ParamsListNode paramsList) {
+    public Type type;
+
+    public DefineFunctionNode(position pos, String funcName) {
         super(pos);
         this.funcName = funcName;
-        this.paramsList = paramsList;
         this.stmts = new ArrayList<>();
     }
 

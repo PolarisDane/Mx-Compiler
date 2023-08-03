@@ -7,11 +7,8 @@ public class TernaryExprNode extends ExprNode {
     public ExprNode trueVal;
     public ExprNode falseVal;
 
-    public TernaryExprNode(position pos, ExprNode condition, ExprNode trueVal, ExprNode falseVal) {
+    public TernaryExprNode(position pos) {
         super(pos);
-        this.condition = condition;
-        this.trueVal = trueVal;
-        this.falseVal = falseVal;
     }
 
     @Override

@@ -1,5 +1,6 @@
-// Generated from ./Parser/MxParser.g4 by ANTLR 4.7.2
 package Parser;
+
+// Generated from MxParser.g4 by ANTLR 4.13.0
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
@@ -10,6 +11,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
  * which can be extended to create a listener which only needs to handle a subset
  * of the available methods.
  */
+@SuppressWarnings("CheckReturnValue")
 public class MxParserBaseListener implements MxParserListener {
 	/**
 	 * {@inheritDoc}
@@ -431,18 +433,6 @@ public class MxParserBaseListener implements MxParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitTypename(MxParser.TypenameContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterAtom(MxParser.AtomContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitAtom(MxParser.AtomContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

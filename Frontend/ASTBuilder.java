@@ -5,6 +5,10 @@ import Parser.*;
 import Utils.*;
 
 public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
+    private Scope gScope;
+    public ASTBuilder(Scope gScope) {
+        this.gScope = gScope
+    }
 
     @Override
     public ASTNode visitFile_input(MxParser.File_inputContext ctx) {
@@ -26,8 +30,8 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitDefineVarStmt(MxParser.DefineVarStmtContext ctx) {
         DefineVarStmtNode defVar = new DefineVarStmtNode(new position(ctx));
-        defVar.type.content = ctx.typename().getText();
-        for (var it: ctx.children) {
+        defVar.type = ((TypeNameNode) visitTypename(ctx.typename())).type;
+        for (var it: ctx.varAssign()) {
             defVar.assigns.add((VarAssignStmtNode) visit(it));
         }
         return defVar;
@@ -37,13 +41,19 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
     public ASTNode visitVarAssign(MxParser.VarAssignContext ctx) {
         VarAssignStmtNode varAssign = new VarAssignStmtNode(new position(ctx));
         varAssign.assignTo = ctx.Identifier().getText();
-        varAssign.assignVal = (ExprNode) visit(ctx.expression());
+        if (ctx.expression() != null) {
+            varAssign.assignVal = (ExprNode) visit(ctx.expression());
+        }
         return varAssign;
     }
 
     @Override
     public ASTNode visitDefineFunction(MxParser.DefineFunctionContext ctx) {
-        DefineFunctionNode defFunc = new DefineFunctionNode(new position(ctx), ctx.Identifier().getText(), (ParamsListNode) visit(ctx.paramsList()));
+        DefineFunctionNode defFunc = new DefineFunctionNode(new position(ctx), ctx.Identifier().getText());
+        defFunc.type = ((TypeNameNode) visit(ctx.typename())).type;
+        if (ctx.paramsList() != null) {
+            defFunc.paramsList = (ParamsListNode) visit(ctx.paramsList());
+        }
         return defFunc;
     }
 
@@ -52,7 +62,7 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
         ParamsListNode paramsList = new ParamsListNode(new position(ctx));
         int siz = ctx.typename().size();
         for (int i = 0; i < siz; i++) {
-            paramsList.types.add(new Type(ctx.typename(i).getText()));
+            paramsList.types.add(((TypeNameNode) visit(ctx.typename(i))).type);
             paramsList.identifiers.add(ctx.Identifier(i).getText());
         }
         return paramsList;
@@ -68,8 +78,10 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitBlock(MxParser.BlockContext ctx) {
         BlockNode block = new BlockNode(new position(ctx));
-        for (var it: ctx.stmt()) {
-            block.stmts.add((StmtNode) visit(it));
+        if (ctx.stmt() != null) {
+            for (var it : ctx.stmt()) {
+                block.stmts.add((StmtNode) visit(it));
+            }
         }
         return block;
     }
@@ -77,13 +89,19 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitDefineClass(MxParser.DefineClassContext ctx) {
         DefineClassNode defClass = new DefineClassNode(new position(ctx), ctx.Identifier().getText());
-        defClass.constructor = (DefineConstructFunctionNode) visit(ctx.defineConstructFunction(0));
-        //if there exists more than one constructor then it should throw exception
-        for (var it: ctx.defineVarStmt()) {
-            defClass.vars.add((DefineVarStmtNode) visit(it));
+        if (ctx.defineConstructFunction() != null) {
+            defClass.constructor = (DefineConstructFunctionNode) visit(ctx.defineConstructFunction(0));
         }
-        for (var it: ctx.defineFunction()) {
-            defClass.functions.add((DefineFunctionNode) visit(it));
+        //if there exists more than one constructor then it should throw exception
+        if (ctx.defineVarStmt() != null) {
+            for (var it : ctx.defineVarStmt()) {
+                defClass.vars.add((DefineVarStmtNode) visit(it));
+            }
+        }
+        if (ctx.defineFunction() != null) {
+            for (var it : ctx.defineFunction()) {
+                defClass.functions.add((DefineFunctionNode) visit(it));
+            }
         }
         return defClass;
     }
@@ -96,7 +114,7 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitExprList(MxParser.ExprListContext ctx) {
         ExprListNode exprList = new ExprListNode(new position(ctx));
-        for (var it: ctx.children) {
+        for (var it: ctx.expression()) {
             exprList.exprs.add((ExprNode) visit(it));
         }
         return exprList;
@@ -104,7 +122,7 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitWrap_expr(MxParser.Wrap_exprContext ctx) {
-        return visitChildren(ctx);
+        return visit(ctx.expression());
     }
 
     @Override
@@ -128,7 +146,9 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
         IfStmtNode ifStmt = new IfStmtNode(new position(ctx));
         ifStmt.condition = (ExprNode) visit(ctx.expression());
         ifStmt.trueThenWork = (SuiteNode) visit(ctx.suite(0));
-        ifStmt.falseThenWork = (SuiteNode) visit(ctx.suite(1));
+        if (ctx.suite().size() > 1) {
+            ifStmt.falseThenWork = (SuiteNode) visit(ctx.suite(1));
+        }
         return ifStmt;
     }
 
@@ -149,9 +169,15 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
         if (ctx.exprStmt() != null) {
             forStmt.exprInit = (ExprStmtNode) visit(ctx.exprStmt());
         }
-        forStmt.condition = (ExprNode) visit(ctx.expression(0));
-        forStmt.step = (ExprNode) visit(ctx.expression(1));
-        forStmt.work = (SuiteNode) visit(ctx.suite());
+        if (ctx.condition != null) {
+            forStmt.condition = (ExprNode) visit(ctx.condition);
+        }
+        if (ctx.step != null) {
+            forStmt.step = (ExprNode) visit(ctx.step);
+        }
+        if (ctx.suite() != null) {
+            forStmt.work = (SuiteNode) visit(ctx.suite());
+        }
         return forStmt;
     }
 
@@ -174,7 +200,10 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitReturnStmt(MxParser.ReturnStmtContext ctx) {
-        ReturnStmtNode returnStmt = new ReturnStmtNode(new position(ctx), (ExprNode) visit(ctx.expression()));
+        ReturnStmtNode returnStmt = new ReturnStmtNode(new position(ctx));
+        if (ctx.expression() != null) {
+            returnStmt.returnVal = (ExprNode) visit(ctx.expression());
+        }
         return returnStmt;
     }
 
@@ -199,7 +228,84 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitNew_expr(MxParser.New_exprContext ctx) {
-        NewExprNode newExpr = new NewExprNode(new position(ctx), ctx.typeprefix().getText(), )
+        NewExprNode newExpr = new NewExprNode(new position(ctx));
+        newExpr.type.content = ctx.typeprefix().getText();
+        newExpr.type.dim = ctx.LeftBracket().size();
         return newExpr;
+    }
+
+    @Override
+    public ASTNode visitAssign_expr(MxParser.Assign_exprContext ctx) {
+        AssignExprNode assignExpr = new AssignExprNode(new position(ctx), (ExprNode) visit(ctx.l), (ExprNode) visit(ctx.r));
+        return assignExpr;
+    }
+
+    @Override
+    public ASTNode visitRight_self_expr(MxParser.Right_self_exprContext ctx) {
+        RightSelfExprNode rightSelfExpr = new RightSelfExprNode(new position(ctx), (ExprNode) visit(ctx.expression()), ctx.op.getText());
+        return rightSelfExpr;
+    }
+
+    @Override
+    public ASTNode visitLeft_self_expr(MxParser.Left_self_exprContext ctx) {
+        LeftSelfExprNode leftSelfExpr = new LeftSelfExprNode(new position(ctx), (ExprNode) visit(ctx.expression()), ctx.op.getText());
+        return leftSelfExpr;
+    }
+
+    @Override
+    public ASTNode visitTernary_expr(MxParser.Ternary_exprContext ctx) {
+        TernaryExprNode ternaryExpr = new TernaryExprNode(new position(ctx));
+        ternaryExpr.condition = (ExprNode) visit(ctx.expression(0));
+        ternaryExpr.trueVal = (ExprNode) visit(ctx.expression(1));
+        ternaryExpr.falseVal = (ExprNode) visit(ctx.expression(2));
+        return ternaryExpr;
+    }
+
+    @Override
+    public ASTNode visitSingle_expr(MxParser.Single_exprContext ctx) {
+        SingleExprNode singleExpr = new SingleExprNode(new position(ctx), (ExprNode) visit(ctx.expression()), ctx.op.getText());
+        return singleExpr;
+    }
+
+    @Override
+    public ASTNode visitArray_expr(MxParser.Array_exprContext ctx) {
+        ArrayExprNode arrayExpr = new ArrayExprNode(new position(ctx), (ExprNode) visit(ctx.expression(0)), (ExprNode) visit(ctx.expression(1)));
+        return arrayExpr;
+    }
+
+    @Override
+    public ASTNode visitAtom_expr(MxParser.Atom_exprContext ctx) {
+        AtomExprNode atomExpr = new AtomExprNode(new position(ctx), ctx.getText(), ctx.Identifier() != null);
+        return atomExpr;
+    }
+
+    @Override
+    public ASTNode visitSuite(MxParser.SuiteContext ctx) {
+        SuiteNode suiteNode = new SuiteNode(new position(ctx));
+        if (ctx.block() != null) {
+            suiteNode.stmts = ((BlockNode) visit(ctx.block())).stmts;
+        }
+        else if (ctx.stmt() != null) {
+            suiteNode.stmts.add((StmtNode) visit(ctx.stmt()));
+        }
+        return suiteNode;
+    }
+
+    @Override
+    public ASTNode visitBasicType(MxParser.BasicTypeContext ctx) {
+        return visitChildren(ctx);
+    }
+
+    @Override
+    public ASTNode visitTypeprefix(MxParser.TypeprefixContext ctx) {
+        return visitChildren(ctx);
+    }
+
+    @Override
+    public ASTNode visitTypename(MxParser.TypenameContext ctx) {
+        TypeNameNode typeNameNode = new TypeNameNode(new position(ctx));
+        typeNameNode.type.content = ctx.typeprefix().getText();
+        typeNameNode.type.dim = ctx.LeftBracket().size();
+        return typeNameNode;
     }
 }

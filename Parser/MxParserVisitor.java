@@ -1,6 +1,6 @@
-// Generated from ./Parser/MxParser.g4 by ANTLR 4.7.2
 package Parser;
 
+// Generated from MxParser.g4 by ANTLR 4.13.0
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 
 /**
@@ -233,10 +233,4 @@ public interface MxParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitTypename(MxParser.TypenameContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link MxParser#atom}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitAtom(MxParser.AtomContext ctx);
 }

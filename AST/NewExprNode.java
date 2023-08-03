@@ -4,9 +4,8 @@ import Utils.*;
 
 public class NewExprNode extends ExprNode {
 
-    NewExprNode(position pos, Type type) {
+    public NewExprNode(position pos) {
         super(pos);
-        this.type = type;
     }
 
     @Override

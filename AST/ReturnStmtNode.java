@@ -3,11 +3,10 @@ package AST;
 import Utils.position;
 
 public class ReturnStmtNode extends StmtNode {
-    public ExprNode returnVal;
+    public ExprNode returnVal = null;
 
-    public ReturnStmtNode(position pos, ExprNode returnVal) {
+    public ReturnStmtNode(position pos) {
         super(pos);
-        this.returnVal = returnVal;
     }
 
     @Override

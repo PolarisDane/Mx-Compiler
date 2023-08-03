@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+export CLASSPATH=".:antlr-4.13.0-complete.jar:$CLASSPATH"
+java -jar antlr-4.13.0-complete.jar MxLexer.g4 -visitor
+java -jar antlr-4.13.0-complete.jar MxParser.g4 -visitor
+javac *.java
+#java org.antlr.v4.gui/TestRig Mx program -ps Mx.ps
+rm *.class
+
+for f in *.java;
+do
+sed -i "1i package Parser;\n" "$f"
+done

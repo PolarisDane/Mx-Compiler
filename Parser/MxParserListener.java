@@ -1,6 +1,6 @@
-// Generated from ./Parser/MxParser.g4 by ANTLR 4.7.2
 package Parser;
 
+// Generated from MxParser.g4 by ANTLR 4.13.0
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
 /**
@@ -382,14 +382,4 @@ public interface MxParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitTypename(MxParser.TypenameContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link MxParser#atom}.
-	 * @param ctx the parse tree
-	 */
-	void enterAtom(MxParser.AtomContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link MxParser#atom}.
-	 * @param ctx the parse tree
-	 */
-	void exitAtom(MxParser.AtomContext ctx);
 }

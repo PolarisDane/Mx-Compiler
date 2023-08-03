@@ -58,9 +58,9 @@ whileStmt: While LeftParenthesis expression RightParenthesis
 
 forStmt:
 	For LeftParenthesis
-        (exprStmt | defineVarStmt)? 
-        expression? Semicolon
-        expression?
+        (exprStmt | defineVarStmt)?
+        condition = expression? Semicolon
+        step = expression?
         RightParenthesis
 		suite;
 
@@ -97,10 +97,8 @@ expression:
     | l = expression op = Or r = expression #binary_expr
     | <assoc = right> expression Question expression Colon expression #ternary_expr
     | <assoc = right> l = expression Assign r = expression #assign_expr
-    | atom #atom_expr;
+    | (This | Null | Identifier | Number | String | True | False) #atom_expr;
 
 typeprefix: (basicType | Identifier);
 typename: typeprefix (LeftBracket RightBracket)*;
 //matching array of more than one dimension
-
-atom: This | Null | Identifier | Number | String | True | False;
