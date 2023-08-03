@@ -5,7 +5,7 @@ import AST.*;
 import Utils.error.semanticError;
 
 public class Scope {
-    public HashMap<String, Type> var = new HashMap<>();
+    public HashMap<String, Type> varMap = new HashMap<>();
     public Scope parentScope = null;
     public DefineClassNode inClass = null;
     public DefineFunctionNode inFunc = null;
@@ -26,28 +26,28 @@ public class Scope {
     }
 
     public void defineVariable(String name, Type type, position pos) {
-        if (var.containsKey(name)) {
+        if (varMap.containsKey(name)) {
             throw new semanticError("Multiple definition of variable " + name, pos);
         }
-        var.put(name, type);
+        varMap.put(name, type);
     }
 
-    public boolean containsVariable(String name) {
-        if (var.containsKey(name)) {
+    public boolean containsVariable(String name, boolean lookUpon) {
+        if (varMap.containsKey(name)) {
             return true;
         }
-        if (parentScope != null) {
-            return parentScope.containsVariable(name);
+        if (parentScope != null && lookUpon) {
+            return parentScope.containsVariable(name, lookUpon);
         }
         return false;
     }
 
-    public Type getVariableType(String name) {
-        if (var.containsKey(name)) {
-            return var.get(name);
+    public Type getVariableType(String name, boolean lookUpon) {
+        if (varMap.containsKey(name)) {
+            return varMap.get(name);
         }
-        if (parentScope != null) {
-            return parentScope.getVariableType(name);
+        if (parentScope != null && lookUpon) {
+            return parentScope.getVariableType(name, lookUpon);
         }
         return null;
     }

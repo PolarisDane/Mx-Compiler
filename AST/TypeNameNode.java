@@ -4,7 +4,7 @@ import Utils.Type;
 import Utils.position;
 
 public class TypeNameNode extends ASTNode {
-    public Type type;
+    public Type type = new Type();
     public TypeNameNode(position pos) {
         super(pos);
     }

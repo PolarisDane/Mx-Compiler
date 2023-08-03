@@ -1,8 +1,18 @@
 package Frontend;
 
 import AST.*;
+import Utils.*;
 
 public class SemanticChecker implements ASTVisitor {
+
+    public Scope curScope;
+    public GlobalScope gScope;
+
+    public SemanticChecker(GlobalScope gScope) {
+        this.gScope = gScope;
+        this.curScope = gScope;
+    }
+
     @Override
     public void visit(FuncCallNode it) {
 

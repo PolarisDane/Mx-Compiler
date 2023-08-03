@@ -19,9 +19,10 @@ public class Builtin {
     public DefineFunctionNode toStringFunc = new DefineFunctionNode(null, "toString");
     public DefineFunctionNode sizeFunc = new DefineFunctionNode(null, "size");
 
-    public DefineClassNode IntClass = new DefineClassNode(null, "Int");
-    public DefineClassNode BoolClass = new DefineClassNode(null, "Bool");
-    public DefineClassNode StringClass = new DefineClassNode(null, "String");
+    public DefineClassNode intClass = new DefineClassNode(null, "int");
+    public DefineClassNode boolClass = new DefineClassNode(null, "bool");
+    public DefineClassNode stringClass = new DefineClassNode(null, "string");
+    public DefineClassNode voidClass = new DefineClassNode(null, "void");
     public DefineFunctionNode lengthFunc = new DefineFunctionNode(null, "length");
     public DefineFunctionNode substringFunc = new DefineFunctionNode(null, "substring");
     public DefineFunctionNode parseIntFunc = new DefineFunctionNode(null, "parseInt");
@@ -67,10 +68,15 @@ public class Builtin {
         parseIntFunc.paramsList = null;
         ordFunc.type = IntType;
         ordFunc.paramsList = paramsListOrd;
-        StringClass.funcMap.put("length", lengthFunc);
-        StringClass.funcMap.put("substring", substringFunc);
-        StringClass.funcMap.put("parseInt", parseIntFunc);
-        StringClass.funcMap.put("ord", ordFunc);
+        stringClass.functions.add(lengthFunc);
+        stringClass.functions.add(substringFunc);
+        stringClass.functions.add(parseIntFunc);
+        stringClass.functions.add(ordFunc);
+        stringClass.funcMap.put("length", lengthFunc);
+        stringClass.funcMap.put("substring", substringFunc);
+        stringClass.funcMap.put("parseInt", parseIntFunc);
+        stringClass.funcMap.put("ord", ordFunc);
+
         //Maybe something to add here?
     }
 }

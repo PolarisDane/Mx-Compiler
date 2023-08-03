@@ -13,17 +13,20 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitFile_input(MxParser.File_inputContext ctx) {
         RootNode root = new RootNode(new position(ctx));
+        System.out.println("Visiting file_input-------------");
         for (var it: ctx.children) {
-            if (it instanceof DefineVarStmtNode) {
+            System.out.println("Visiting under root---------");
+            if (it instanceof MxParser.DefineVarStmtContext) {
                 root.defVars.add((DefineVarStmtNode) visit(it));
             }
-            else if (it instanceof DefineClassNode) {
+            else if (it instanceof MxParser.DefineClassContext) {
                 root.defClasses.add((DefineClassNode) visit(it));
             }
-            else if (it instanceof DefineFunctionNode) {
+            else if (it instanceof MxParser.DefineFunctionContext) {
                 root.defFunctions.add((DefineFunctionNode) visit(it));
             }
         }
+        System.out.println("class size: " + root.defClasses.size());
         return root;
     }
 
@@ -89,22 +92,20 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitDefineClass(MxParser.DefineClassContext ctx) {
         DefineClassNode defClass = new DefineClassNode(new position(ctx), ctx.Identifier().getText());
-        if (ctx.defineConstructFunction() != null) {
-            defClass.constructor = (DefineConstructFunctionNode) visit(ctx.defineConstructFunction(0));
-        }
-        //if there exists more than one constructor then it should throw exception
-        if (ctx.defineVarStmt() != null) {
-            for (var it : ctx.defineVarStmt()) {
+        for (var it: ctx.children) {
+            if (it instanceof MxParser.DefineVarStmtContext) {
                 defClass.vars.add((DefineVarStmtNode) visit(it));
             }
-        }
-        if (ctx.defineFunction() != null) {
-            for (var it : ctx.defineFunction()) {
+            if (it instanceof MxParser.DefineConstructFunctionContext) {
+                defClass.constructor = (DefineConstructFunctionNode) visit(it);
+            }//if there exists more than one constructor then it should throw exception
+            if (it instanceof MxParser.DefineFunctionContext) {
                 defClass.functions.add((DefineFunctionNode) visit(it));
             }
         }
         return defClass;
-    }
+    }//variables aren't allowed in forward reference
+    //therefore we must visit nodes in their original order
 
     @Override
     public ASTNode visitExprStmt(MxParser.ExprStmtContext ctx) {

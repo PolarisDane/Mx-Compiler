@@ -87,18 +87,18 @@ public class SymbolCollector implements ASTVisitor {
 
     @Override
     public void visit(DefineClassNode it) {
-        gScope.addClass();
+        gScope.addClass(it, it.pos);
         for (var defVar: it.vars) {
             for (var varName: defVar.assigns) {
                 if (it.varMap.containsKey(varName.assignTo)) {
-                    throw new semanticError("Multiple definition of variable " + varName.assignTo + " in class " + it.identifier, varName.pos);
+                    throw new semanticError("Multiple definition of variable " + varName.assignTo + " in class " + it.className, varName.pos);
                 }
                 it.varMap.put(varName.assignTo, varName);
             }
         }
         for (var func: it.functions) {
             if (it.funcMap.containsKey(func.funcName)) {
-                throw new semanticError("Multiple definition of function " + func.funcName + " in class " + it.identifier, func.pos);
+                throw new semanticError("Multiple definition of function " + func.funcName + " in class " + it.className, func.pos);
             }
             it.funcMap.put(func.funcName, func);
         }
@@ -108,7 +108,9 @@ public class SymbolCollector implements ASTVisitor {
     public void visit(DefineConstructFunctionNode it) {}
 
     @Override
-    public void visit(DefineFunctionNode it) {}
+    public void visit(DefineFunctionNode it) {
+        gScope.addFunc(it, it.pos);
+    }//usage of forward reference has need for collecting functions in this step
 
     @Override
     public void visit(SuiteNode it) {}
@@ -121,8 +123,15 @@ public class SymbolCollector implements ASTVisitor {
 
     @Override
     public void visit(RootNode it) {
-        for (var nxt: it.defClasses) {
-            nxt.accept(this);
+        if (it.defClasses != null) {
+            for (var nxt : it.defClasses) {
+                nxt.accept(this);
+            }
+        }
+        if (it.defFunctions != null) {
+            for (var nxt : it.defFunctions) {
+                nxt.accept(this);
+            }
         }
     }
 }
