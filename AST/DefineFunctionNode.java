@@ -7,7 +7,7 @@ import Utils.position;
 
 public class DefineFunctionNode extends ASTNode {
     public String funcName;
-    public ParamsListNode paramsList;
+    public ParamsListNode paramsList = null;
     public ArrayList<StmtNode> stmts;
 
     public Type type;

@@ -2,6 +2,7 @@ package Frontend;
 
 import AST.*;
 import Utils.*;
+import Utils.error.semanticError;
 
 import java.util.HashMap;
 
@@ -87,6 +88,20 @@ public class SymbolCollector implements ASTVisitor {
     @Override
     public void visit(DefineClassNode it) {
         gScope.addClass();
+        for (var defVar: it.vars) {
+            for (var varName: defVar.assigns) {
+                if (it.varMap.containsKey(varName.assignTo)) {
+                    throw new semanticError("Multiple definition of variable " + varName.assignTo + " in class " + it.identifier, varName.pos);
+                }
+                it.varMap.put(varName.assignTo, varName);
+            }
+        }
+        for (var func: it.functions) {
+            if (it.funcMap.containsKey(func.funcName)) {
+                throw new semanticError("Multiple definition of function " + func.funcName + " in class " + it.identifier, func.pos);
+            }
+            it.funcMap.put(func.funcName, func);
+        }
     }
 
     @Override
@@ -106,6 +121,8 @@ public class SymbolCollector implements ASTVisitor {
 
     @Override
     public void visit(RootNode it) {
-        for (var nxt: it.)
+        for (var nxt: it.defClasses) {
+            nxt.accept(this);
+        }
     }
 }

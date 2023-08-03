@@ -7,7 +7,7 @@ import Utils.*;
 public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
     private Scope gScope;
     public ASTBuilder(Scope gScope) {
-        this.gScope = gScope
+        this.gScope = gScope;
     }
 
     @Override
