@@ -16,7 +16,19 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(FuncCallNode it) {
-
+        DefineFunctionNode funcNode = gScope.getFunc(it.func, it.pos);
+        if (funcNode.paramsList.identifiers.size() != it.args.exprs.size()) {
+            throw new semanticError("Function " + it.func + " expected " + funcNode.paramsList.identifiers.size() + " arguments, got " + it.args.exprs.size(), it.pos);
+        }
+        it.args.accept(this);
+        int siz = it.args.exprs.size();
+        for (int i = 0; i < siz; i++) {
+            Type expected = funcNode.paramsList.types.get(i);
+            Type given = it.args.exprs.get(i).type;
+            if (!given.equals(expected)) {
+                throw new semanticError("Function " + it.func + " argument " + funcNode.paramsList.identifiers.get(i) + " expected type " + expected.content + ", got " + given.content, it.pos);
+            }
+        }
     }
 
     @Override
@@ -26,7 +38,7 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(WrapExprNode it) {
-
+        //should be inaccessible
     }
 
     @Override
@@ -41,28 +53,80 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(RightSelfExprNode it) {
-
+//        if (!curScope.containsVariable(it.obj.content, true)) {
+//            throw new semanticError("Variable " + it.obj.content + " not defined", it.pos);
+//        }
+        it.obj.accept(this);
+        if (curScope.getVariableType(it.obj.content, true) != null && !curScope.getVariableType(it.obj.content, true).equals(builtin.IntType)) {
+            throw new semanticError("Variable " + it.obj.content + " type not expected", it.pos);
+        }
+        if (!it.obj.isAssignable()) {
+            throw new semanticError("Caught right value when operation expected left value", it.pos);
+        }
     }
 
     @Override
     public void visit(LeftSelfExprNode it) {
-
+//        if (!curScope.containsVariable(it.obj.content, true)) {
+//            throw new semanticError("Variable " + it.obj.content + " not defined", it.pos);
+//        }
+        it.obj.accept(this);
+        if (curScope.getVariableType(it.obj.content, true) != null && !curScope.getVariableType(it.obj.content, true).equals(builtin.IntType)) {
+            throw new semanticError("Variable " + it.obj.content + " type not expected", it.pos);
+        }
+        if (!it.obj.isAssignable()) {
+            throw new semanticError("Caught right value when operation expected left value", it.pos);
+        }
     }
 
     @Override
     public void visit(SingleExprNode it) {
-
+        it.obj.accept(this);
+        if (it.op.equals("!")) {
+            if (curScope.getVariableType(it.obj.content, true) != null && !curScope.getVariableType(it.obj.content, true).equals(builtin.BoolType)){
+                throw new semanticError("Variable " + it.obj.content + " type not expected", it.pos);
+            }
+        }
+        else if (it.op.equals("+") || it.op.equals("-") || it.op.equals("~")) {
+            if (curScope.getVariableType(it.obj.content, true) != null && !curScope.getVariableType(it.obj.content, true).equals(builtin.IntType)) {
+                throw new semanticError("Variable " + it.obj.content + " type not expected", it.pos);
+            }
+        }
     }
 
     @Override
     public void visit(BinaryExprNode it) {
-
-    }
+        if (!it.lop.type.equals(it.rop.type)) {
+            throw new semanticError("Two operands do not have the same type", it.pos);
+        }
+        it.lop.accept(this);
+        it.rop.accept(this);
+        if (it.lop.type.equals("bool")) {
+            if (!it.op.equals("&&") && !it.op.equals("||") && !it.op.equals("==") && !it.op.equals("!=")) {
+                throw new semanticError("Operation not allowed for bool type", it.pos);
+            }
+        }
+        else if (it.lop.type.equals("int")) {
+            if (it.op.equals("&&") || !it.op.equals("||")) {
+                throw new semanticError("Operation not allowed for int type", it.pos);
+            }
+        }
+        else if (it.lop.type.equals("string")) {
+            if (!it.op.equals("+") && !it.op.equals("==") && !it.op.equals("!=") && !it.op.equals("<") && !it.op.equals(">") && !it.op.equals("<=") && !it.op.equals(">=")){
+                throw new semanticError("Operation not allowed for string type", it.pos);
+            }
+        }
+        else {
+            if (!it.op.equals("==") && !it.op.equals("!-")) {
+                throw new semanticError("Operation not allowed for class", it.pos);
+            }
+        }
+    }//not done
 
     @Override
     public void visit(TernaryExprNode it) {
         if (!it.condition.type.equals(builtin.BoolType)) {
-            throw new semanticError("Condition type isn't bool in ternary expression", it.pos);
+            throw new semanticError("Condition type isn't bool type in ternary expression", it.pos);
         }
         it.condition.accept(this);
         if (!it.trueVal.type.equals(it.falseVal.type)) {
@@ -126,12 +190,16 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(BreakStmtNode it) {
-
+        if (!curScope.inLoop) {
+            throw new semanticError("Break statement found outside loop", it.pos);
+        }
     }
 
     @Override
     public void visit(ContinueStmtNode it) {
-
+        if (!curScope.inLoop) {
+            throw new semanticError("Continue statement found outside loop", it.pos);
+        }
     }
 
     @Override
@@ -164,7 +232,13 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(ParamsListNode it) {
-
+        int siz = it.identifiers.size();
+        for (int i = 0; i < siz; i++) {
+            if (!gScope.containsClass(it.types.get(i).content, it.pos)) {
+                throw new semanticError("Defined type " + it.types.get(i).content + " not found", it.pos);
+            }
+            curScope.defineVariable(it.identifiers.get(i), it.types.get(i), it.pos);
+        }
     }
 
     @Override
@@ -190,7 +264,7 @@ public class SemanticChecker implements ASTVisitor {
         if (!it.type.equals(builtin.VoidType) && curScope.returned == null) {
             throw new semanticError("Function " + it.funcName + " missing return statement", it.pos);
         }
-        if (!it.type.equals(curScope.returned)) {
+        if (!it.type.equals(builtin.VoidType) && !it.type.equals(curScope.returned)) {
             throw new semanticError("Function " + it.funcName + " returned value is not of expected type", it.pos);
         }
         curScope = curScope.parentScope;//return to original scope

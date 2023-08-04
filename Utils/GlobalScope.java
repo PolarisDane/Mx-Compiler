@@ -36,7 +36,7 @@ public class GlobalScope extends Scope  {
     }
     public DefineFunctionNode getFunc(String funcName, position pos) {
         if (funcMap.containsKey(funcName)) return funcMap.get(funcName);
-        throw new semanticError("Function " + funcName + " doesn't exist", pos);
+        throw new semanticError("Function " + funcName + " not defined", pos);
     }
     public void addClass(DefineClassNode it, position pos) {
         if (classMap.containsKey(it.className) || funcMap.containsKey(it.className)) {
@@ -51,6 +51,6 @@ public class GlobalScope extends Scope  {
     }
     public DefineClassNode getClass(String className, position pos) {
         if (classMap.containsKey(className)) return classMap.get(className);
-        throw new semanticError("Class " + className + " doesn't exist", pos);
+        throw new semanticError("Class " + className + " not defined", pos);
     }
 }

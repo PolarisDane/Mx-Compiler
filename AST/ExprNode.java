@@ -4,6 +4,10 @@ package AST;
 import Utils.*;
 
 public abstract class ExprNode extends ASTNode {
+    public String content;
+
+    public DefineFunctionNode funcProb;
+
     public Type type;
     // public entity val;
 
@@ -11,7 +15,5 @@ public abstract class ExprNode extends ASTNode {
         super(pos);
     }
 
-    public boolean isAssignable() {
-        return false;
-    }
+    public abstract boolean isAssignable();
 }

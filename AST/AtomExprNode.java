@@ -3,7 +3,6 @@ package AST;
 import Utils.position;
 
 public class AtomExprNode extends ExprNode {
-    public String content;
     public boolean isIdentifier;
 
     public AtomExprNode(position pos, String content, boolean isIdentifier) {
@@ -15,5 +14,10 @@ public class AtomExprNode extends ExprNode {
     @Override
     public void accept(ASTVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public boolean isAssignable() {
+        return isIdentifier;
     }
 }

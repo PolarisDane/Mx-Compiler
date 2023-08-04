@@ -12,4 +12,9 @@ public class NewExprNode extends ExprNode {
     public void accept(ASTVisitor visitor) {
         visitor.visit(this);
     }
+
+    @Override
+    public boolean isAssignable() {
+        return false;
+    }
 }

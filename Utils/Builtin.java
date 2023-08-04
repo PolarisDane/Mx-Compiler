@@ -9,6 +9,7 @@ public class Builtin {
     public Type StringType = new Type("string");
     public Type BoolType = new Type("bool");
     public Type VoidType = new Type("void");
+    public Type NullType = new Type("null");
 
     public DefineFunctionNode printFunc = new DefineFunctionNode(null, "print");
     public DefineFunctionNode printlnFunc = new DefineFunctionNode(null, "println");

@@ -303,6 +303,9 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
         if (ctx.True() != null || ctx.False() != null) {
             atomExpr.type = builtin.BoolType;
         }
+        if (ctx.Null() != null) {
+            atomExpr.type = builtin.NullType;
+        }
         return atomExpr;
     }
 

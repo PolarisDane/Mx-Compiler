@@ -3,8 +3,8 @@ package AST;
 import Utils.position;
 
 public class ArrayExprNode extends ExprNode {
-    ExprNode array;
-    ExprNode index;
+    public ExprNode array;
+    public ExprNode index;
 
     public ArrayExprNode(position pos, ExprNode array, ExprNode index) {
         super(pos);
@@ -15,5 +15,10 @@ public class ArrayExprNode extends ExprNode {
     @Override
     public void accept(ASTVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public boolean isAssignable() {
+        return true;
     }
 }
