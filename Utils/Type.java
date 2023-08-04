@@ -11,4 +11,12 @@ public class Type {
     public Type(String content) {
         this.content = content;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Type)) {
+            return false;
+        }
+        return ((Type) obj).content.equals(this.content) && ((Type) obj).dim == this.dim;
+    }
 }

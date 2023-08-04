@@ -9,6 +9,7 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
     public ASTBuilder(Scope gScope) {
         this.gScope = gScope;
     }
+    public Builtin builtin = new Builtin();
 
     @Override
     public ASTNode visitFile_input(MxParser.File_inputContext ctx) {
@@ -17,16 +18,15 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
         for (var it: ctx.children) {
             System.out.println("Visiting under root---------");
             if (it instanceof MxParser.DefineVarStmtContext) {
-                root.defVars.add((DefineVarStmtNode) visit(it));
+                root.Defs.add((DefineVarStmtNode) visit(it));
             }
             else if (it instanceof MxParser.DefineClassContext) {
-                root.defClasses.add((DefineClassNode) visit(it));
+                root.Defs.add((DefineClassNode) visit(it));
             }
             else if (it instanceof MxParser.DefineFunctionContext) {
-                root.defFunctions.add((DefineFunctionNode) visit(it));
+                root.Defs.add((DefineFunctionNode) visit(it));
             }
         }
-        System.out.println("class size: " + root.defClasses.size());
         return root;
     }
 
@@ -35,7 +35,9 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
         DefineVarStmtNode defVar = new DefineVarStmtNode(new position(ctx));
         defVar.type = ((TypeNameNode) visitTypename(ctx.typename())).type;
         for (var it: ctx.varAssign()) {
-            defVar.assigns.add((VarAssignStmtNode) visit(it));
+            VarAssignStmtNode varAssignStmtNode = (VarAssignStmtNode) visit(it);
+            varAssignStmtNode.type = defVar.type;
+            defVar.assigns.add(varAssignStmtNode);
         }
         return defVar;
     }
@@ -57,6 +59,7 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
         if (ctx.paramsList() != null) {
             defFunc.paramsList = (ParamsListNode) visit(ctx.paramsList());
         }
+        defFunc.stmts = ((BlockNode) visit(ctx.block())).stmts;
         return defFunc;
     }
 
@@ -82,7 +85,18 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
     public ASTNode visitBlock(MxParser.BlockContext ctx) {
         BlockNode block = new BlockNode(new position(ctx));
         if (ctx.stmt() != null) {
+            System.out.println("ASTBuild stmts size: " + ctx.stmt().size());
             for (var it : ctx.stmt()) {
+//                var stmtNode = (StmtNode) visit(it);
+//                if (stmtNode instanceof ExprStmtNode) {
+//                    System.out.println("ExprStmtNode here");
+//                }
+//                if (stmtNode instanceof StmtNode) {
+//                    System.out.println("StmtNode here");
+//                }
+//                if (stmtNode == null) {
+//                    System.out.println("null");
+//                }
                 block.stmts.add((StmtNode) visit(it));
             }
         }
@@ -109,7 +123,10 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitExprStmt(MxParser.ExprStmtContext ctx) {
-        return visitChildren(ctx);
+        if (ctx.exprList() != null) {
+            return new ExprStmtNode(new position(ctx), (ExprListNode) visit(ctx.exprList()));
+        }
+        return new ExprStmtNode(new position(ctx), null);
     }
 
     @Override
@@ -277,6 +294,15 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitAtom_expr(MxParser.Atom_exprContext ctx) {
         AtomExprNode atomExpr = new AtomExprNode(new position(ctx), ctx.getText(), ctx.Identifier() != null);
+        if (ctx.Number() != null) {
+            atomExpr.type = builtin.IntType;
+        }
+        if (ctx.String() != null) {
+            atomExpr.type = builtin.StringType;
+        }
+        if (ctx.True() != null || ctx.False() != null) {
+            atomExpr.type = builtin.BoolType;
+        }
         return atomExpr;
     }
 

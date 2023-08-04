@@ -11,7 +11,7 @@ public class Scope {
     public DefineFunctionNode inFunc = null;
     public boolean inLoop = false;
 
-    public boolean returned = false;
+    public Type returned = null;
 
     public Scope() {}
 

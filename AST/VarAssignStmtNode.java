@@ -9,6 +9,8 @@ public class VarAssignStmtNode extends StmtNode {
     public String assignTo;
     public ExprNode assignVal;
 
+    public Type type;
+
     public VarAssignStmtNode(position pos) {
         super(pos);
     }

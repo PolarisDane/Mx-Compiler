@@ -30,6 +30,10 @@ public class GlobalScope extends Scope  {
         }
         funcMap.put(it.funcName, it);
     }
+    public boolean containsFunc(String funcName, position pos) {
+        if (funcMap.containsKey(funcName)) return true;
+        return false;
+    }
     public DefineFunctionNode getFunc(String funcName, position pos) {
         if (funcMap.containsKey(funcName)) return funcMap.get(funcName);
         throw new semanticError("Function " + funcName + " doesn't exist", pos);
@@ -40,6 +44,10 @@ public class GlobalScope extends Scope  {
         }
         System.out.println("Added class " + it.className);
         classMap.put(it.className, it);
+    }
+    public boolean containsClass(String className, position pos) {
+        if (classMap.containsKey(className)) return true;
+        return false;
     }
     public DefineClassNode getClass(String className, position pos) {
         if (classMap.containsKey(className)) return classMap.get(className);

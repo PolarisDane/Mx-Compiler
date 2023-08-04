@@ -123,15 +123,11 @@ public class SymbolCollector implements ASTVisitor {
 
     @Override
     public void visit(RootNode it) {
-        if (it.defClasses != null) {
-            for (var nxt : it.defClasses) {
-                nxt.accept(this);
-            }
+        if (it.Defs.isEmpty()) {
+            throw new semanticError("Main function not found", it.pos);
         }
-        if (it.defFunctions != null) {
-            for (var nxt : it.defFunctions) {
-                nxt.accept(this);
-            }
+        for (var nxt: it.Defs) {
+            nxt.accept(this);
         }
     }
 }
