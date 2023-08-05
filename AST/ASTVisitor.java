@@ -31,7 +31,6 @@ public interface ASTVisitor {
     void visit(DefineConstructFunctionNode it);
     void visit(DefineFunctionNode it);
 
-    void visit(SuiteNode it);
     void visit(BlockNode it);
 
     void visit(TypeNameNode it);

@@ -4,8 +4,8 @@ import Utils.position;
 
 public class IfStmtNode extends StmtNode {
     public ExprNode condition;
-    public SuiteNode trueThenWork;
-    public SuiteNode falseThenWork;
+    public StmtNode trueThenWork;
+    public StmtNode falseThenWork;
 
     public IfStmtNode(position pos) {
         super(pos);

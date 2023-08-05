@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 import Utils.position;
 
-public class BlockNode extends ASTNode {
+public class BlockNode extends StmtNode {
     public ArrayList<StmtNode> stmts;
 
     public BlockNode(position pos) {

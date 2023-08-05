@@ -5,11 +5,11 @@ import Utils.position;
 import Utils.Type;
 
 public class Builtin {
-    public Type IntType = new Type("int");
-    public Type StringType = new Type("string");
-    public Type BoolType = new Type("bool");
-    public Type VoidType = new Type("void");
-    public Type NullType = new Type("null");
+    public Type IntType = new Type("int" ,0);
+    public Type StringType = new Type("string", 0);
+    public Type BoolType = new Type("bool", 0);
+    public Type VoidType = new Type("void", 0);
+    public Type NullType = new Type("null", 0);
 
     public DefineFunctionNode printFunc = new DefineFunctionNode(null, "print");
     public DefineFunctionNode printlnFunc = new DefineFunctionNode(null, "println");

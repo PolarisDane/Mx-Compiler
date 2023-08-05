@@ -4,7 +4,7 @@ import Utils.position;
 
 public class WhileStmtNode extends StmtNode {
     public ExprNode condition;
-    public SuiteNode work;
+    public StmtNode work;
 
     public WhileStmtNode(position pos) {
         super(pos);

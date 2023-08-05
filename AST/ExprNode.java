@@ -8,7 +8,7 @@ public abstract class ExprNode extends ASTNode {
 
     public DefineFunctionNode funcProb;
 
-    public Type type;
+    public Type type = new Type();
     // public entity val;
 
     public ExprNode(position pos) {

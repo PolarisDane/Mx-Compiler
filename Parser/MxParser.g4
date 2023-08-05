@@ -8,7 +8,6 @@ file_input: (defineFunction | defineClass | defineVarStmt)* EOF;
 
 basicType: Int | StringType | Bool | Void;
 
-suite: block | stmt;
 block:
     LeftBrace
         stmt*
@@ -49,12 +48,12 @@ stmt:
 
 ifStmt:
 	If LeftParenthesis expression RightParenthesis 
-        suite
+        stmt
     //maybe else if here?
-	(Else suite)?;
+	(Else stmt)?;
 
 whileStmt: While LeftParenthesis expression RightParenthesis
-     suite;
+     stmt;
 
 forStmt:
 	For LeftParenthesis
@@ -62,7 +61,7 @@ forStmt:
         condition = expression? Semicolon
         step = expression?
         RightParenthesis
-		suite;
+		stmt;
 
 continueStmt: Continue Semicolon;
 

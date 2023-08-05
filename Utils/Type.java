@@ -4,12 +4,20 @@ import java.util.HashMap;
 
 public class Type {
     public String content;
-    public HashMap<String, Type> members = new HashMap<>();
     public int dim = 0;
 
+    public boolean isReference = false;
+
     public Type() {}
-    public Type(String content) {
+    public Type(String content, int dim) {
         this.content = content;
+        this.dim = dim;
+        if (!content.equals("int") && !content.equals("bool") && !content.equals("null")) {
+            isReference = true;
+        }
+        if (dim > 0) {
+            isReference = true;
+        }
     }
 
     @Override
@@ -19,4 +27,5 @@ public class Type {
         }
         return ((Type) obj).content.equals(this.content) && ((Type) obj).dim == this.dim;
     }
+
 }

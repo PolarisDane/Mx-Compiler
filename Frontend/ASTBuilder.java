@@ -163,9 +163,9 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
     public ASTNode visitIfStmt(MxParser.IfStmtContext ctx) {
         IfStmtNode ifStmt = new IfStmtNode(new position(ctx));
         ifStmt.condition = (ExprNode) visit(ctx.expression());
-        ifStmt.trueThenWork = (SuiteNode) visit(ctx.suite(0));
-        if (ctx.suite().size() > 1) {
-            ifStmt.falseThenWork = (SuiteNode) visit(ctx.suite(1));
+        ifStmt.trueThenWork = (StmtNode) visit(ctx.stmt(0));
+        if (ctx.stmt().size() > 1) {
+            ifStmt.falseThenWork = (StmtNode) visit(ctx.stmt(1));
         }
         return ifStmt;
     }
@@ -174,7 +174,7 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
     public ASTNode visitWhileStmt(MxParser.WhileStmtContext ctx) {
         WhileStmtNode whileStmt = new WhileStmtNode(new position(ctx));
         whileStmt.condition = (ExprNode) visit(ctx.expression());
-        whileStmt.work = (SuiteNode) visit(ctx.suite());
+        whileStmt.work = (StmtNode) visit(ctx.stmt());
         return whileStmt;
     }
 
@@ -193,8 +193,8 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
         if (ctx.step != null) {
             forStmt.step = (ExprNode) visit(ctx.step);
         }
-        if (ctx.suite() != null) {
-            forStmt.work = (SuiteNode) visit(ctx.suite());
+        if (ctx.stmt() != null) {
+            forStmt.work = (StmtNode) visit(ctx.stmt());
         }
         return forStmt;
     }
@@ -310,18 +310,6 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
     }
 
     @Override
-    public ASTNode visitSuite(MxParser.SuiteContext ctx) {
-        SuiteNode suiteNode = new SuiteNode(new position(ctx));
-        if (ctx.block() != null) {
-            suiteNode.stmts = ((BlockNode) visit(ctx.block())).stmts;
-        }
-        else if (ctx.stmt() != null) {
-            suiteNode.stmts.add((StmtNode) visit(ctx.stmt()));
-        }
-        return suiteNode;
-    }
-
-    @Override
     public ASTNode visitBasicType(MxParser.BasicTypeContext ctx) {
         return visitChildren(ctx);
     }
@@ -334,8 +322,7 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitTypename(MxParser.TypenameContext ctx) {
         TypeNameNode typeNameNode = new TypeNameNode(new position(ctx));
-        typeNameNode.type.content = ctx.typeprefix().getText();
-        typeNameNode.type.dim = ctx.LeftBracket().size();
+        typeNameNode.type = new Type(ctx.typeprefix().getText(), ctx.LeftBracket().size());
         return typeNameNode;
     }
 }

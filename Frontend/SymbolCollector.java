@@ -113,9 +113,6 @@ public class SymbolCollector implements ASTVisitor {
     }//usage of forward reference has need for collecting functions in this step
 
     @Override
-    public void visit(SuiteNode it) {}
-
-    @Override
     public void visit(BlockNode it) {}
 
     @Override

@@ -21,10 +21,6 @@ public class Scope {
         this.inFunc = parentScope.inFunc;
     }
 
-    public Scope parentScope() {
-        return parentScope;
-    }
-
     public void defineVariable(String name, Type type, position pos) {
         if (varMap.containsKey(name)) {
             throw new semanticError("Multiple definition of variable " + name, pos);

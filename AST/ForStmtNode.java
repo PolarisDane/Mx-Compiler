@@ -7,7 +7,7 @@ public class ForStmtNode extends StmtNode {
     public DefineVarStmtNode defInit;
     public ExprNode condition;
     public ExprNode step;
-    public SuiteNode work;
+    public StmtNode work;
 
     public ForStmtNode(position pos) {
         super(pos);
