@@ -17,7 +17,11 @@ public class SemanticChecker implements ASTVisitor {
     @Override
     public void visit(FuncCallNode it) {
         DefineFunctionNode funcNode = gScope.getFunc(it.func, it.pos);
-        if (funcNode.paramsList.identifiers.size() != it.args.exprs.size()) {
+        if (funcNode.paramsList == null && it.args == null){
+            it.type = funcNode.type;
+            return;
+        }
+        if (funcNode.paramsList == null || it.args == null || funcNode.paramsList.identifiers.size() != it.args.exprs.size()) {
             throw new semanticError("Function " + it.func + " expected " + funcNode.paramsList.identifiers.size() + " arguments, got " + it.args.exprs.size(), it.pos);
         }
         it.args.accept(this);
@@ -53,13 +57,37 @@ public class SemanticChecker implements ASTVisitor {
         if (!curScope.containsVariable(it.array.content, true)) {
             throw new semanticError("Array " + it.content + " not defined", it.pos);
         }
-
+        if (it.array.type.dim == 0) {
+            throw new semanticError("Target type not array", it.pos);
+        }
+        it.array.accept(this);
+        it.index.accept(this);
+        if (!it.index.equals(builtin.IntType)) {
+            throw new semanticError("Array index not type int", it.pos);
+        }
+        it.type = new Type(it.array.type.content, it.array.type.dim - 1);
     }
 
     @Override
     public void visit(MemberExprNode it) {
-//        it.obj.accept(this);
-//        gScope.containsClass(it.)
+        it.obj.accept(this);
+        DefineClassNode classNode = gScope.getClass(it.obj.type.content, it.pos);
+        if (it.memberFunc != null) {
+            if (it.obj.type.dim > 0) {
+                if (it.memberFunc.func.equals("size")) {
+                    return;
+                }
+            }
+            if (!classNode.funcMap.containsKey(it.memberFunc.func)) {
+                throw new semanticError("Member function " + it.memberFunc.func + " not defined in class " + it.obj.type.content, it.pos);
+            }
+            it.memberFunc.accept(this);
+        }
+        if (it.member != null) {
+            if (!classNode.varMap.containsKey(it.member)) {
+                throw new semanticError("Member variable " + it.member + " not defined in class " + it.obj.type.content, it.pos);
+            }
+        }
     }
 
     @Override
@@ -394,7 +422,7 @@ public class SemanticChecker implements ASTVisitor {
         for (var nxt: it.stmts) {
             nxt.accept(this);
         }
-        if (!it.type.equals(builtin.VoidType) && curScope.returned == null) {
+        if (!it.type.equals(builtin.VoidType) && curScope.returned == null && it.funcName.equals("main")) {
             throw new semanticError("Function " + it.funcName + " missing return statement", it.pos);
         }
         if (!it.type.equals(builtin.VoidType) && !it.type.equals(curScope.returned)) {

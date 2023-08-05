@@ -150,7 +150,10 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitFuncCall(MxParser.FuncCallContext ctx) {
-        FuncCallNode funcCall = new FuncCallNode(new position(ctx), ctx.Identifier().getText(), (ExprListNode) visit(ctx.exprList()));
+        FuncCallNode funcCall = new FuncCallNode(new position(ctx), ctx.Identifier().getText());
+        if (ctx.exprList() != null) {
+            funcCall.args = (ExprListNode) visit(ctx.exprList());
+        }
         return funcCall;
     }
 

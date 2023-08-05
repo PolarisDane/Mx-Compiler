@@ -24,6 +24,7 @@ public class Builtin {
     public DefineClassNode boolClass = new DefineClassNode(null, "bool");
     public DefineClassNode stringClass = new DefineClassNode(null, "string");
     public DefineClassNode voidClass = new DefineClassNode(null, "void");
+    public DefineClassNode nullClass = new DefineClassNode(null, "null");
     public DefineFunctionNode lengthFunc = new DefineFunctionNode(null, "length");
     public DefineFunctionNode substringFunc = new DefineFunctionNode(null, "substring");
     public DefineFunctionNode parseIntFunc = new DefineFunctionNode(null, "parseInt");

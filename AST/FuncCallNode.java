@@ -6,10 +6,9 @@ public class FuncCallNode extends ExprNode {
     public String func;
     public ExprListNode args;
 
-    public FuncCallNode(position pos, String func, ExprListNode args) {
+    public FuncCallNode(position pos, String func) {
         super(pos);
         this.func = func;
-        this.args = args;
     }
 
     @Override

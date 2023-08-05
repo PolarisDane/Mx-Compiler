@@ -22,6 +22,7 @@ public class GlobalScope extends Scope  {
         classMap.put("string", builtin.stringClass);
         classMap.put("bool", builtin.boolClass);
         classMap.put("void", builtin.voidClass);
+        classMap.put("null", builtin.nullClass);
     }//put all builtin classes and functions into global scope for further semantic check usage
 
     public void addFunc(DefineFunctionNode it, position pos) {
