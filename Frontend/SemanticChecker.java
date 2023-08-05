@@ -33,7 +33,14 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(NewExprNode it) {
-        //Type should not be void
+        if (it.expr != null) {
+            for (var nxt : it.expr) {
+                nxt.accept(this);
+                if (!nxt.type.equals(builtin.IntType)) {
+                    throw new semanticError("Index is not type int", it.pos);
+                }
+            }
+        }
     }
 
     @Override
@@ -43,12 +50,16 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(ArrayExprNode it) {
+        if (!curScope.containsVariable(it.array.content, true)) {
+            throw new semanticError("Array " + it.content + " not defined", it.pos);
+        }
 
     }
 
     @Override
     public void visit(MemberExprNode it) {
-
+//        it.obj.accept(this);
+//        gScope.containsClass(it.)
     }
 
     @Override
@@ -176,6 +187,9 @@ public class SemanticChecker implements ASTVisitor {
     @Override
     public void visit(AtomExprNode it) {
 //        System.out.println(it.content);
+        if (it.content.equals("this") && curScope.inClass == null) {
+            throw new semanticError("This used outside any class", it.pos);
+        }
         if (it.isIdentifier) {
             if (!curScope.containsVariable(it.content, true)) {
                 throw new semanticError("Variable " + it.content + " not defined", it.pos);
@@ -202,8 +216,26 @@ public class SemanticChecker implements ASTVisitor {
         if (!it.condition.type.equals(builtin.BoolType)) {
             throw new semanticError("Statement condition is not type bool", it.pos);
         }
-        it.trueThenWork.accept(this);
-        it.falseThenWork.accept(this);
+        curScope = new Scope(curScope);
+        if (it.trueThenWork != null) {
+            if (it.trueThenWork instanceof BlockNode) {
+                ((BlockNode) it.trueThenWork).stmts.forEach(nxt->nxt.accept(this));
+            }
+            else {
+                it.trueThenWork.accept(this);
+            }
+        }
+        curScope = curScope.parentScope;
+        if (it.falseThenWork != null) {
+            curScope = new Scope(curScope);
+            if (it.falseThenWork instanceof BlockNode) {
+                ((BlockNode) it.falseThenWork).stmts.forEach(nxt->nxt.accept(this));
+            }
+            else {
+                it.falseThenWork.accept(this);
+            }
+            curScope = curScope.parentScope;
+        }
     }
 
     @Override
@@ -244,7 +276,14 @@ public class SemanticChecker implements ASTVisitor {
         if (!it.condition.type.equals(builtin.BoolType)) {
             throw new semanticError("Statement condition is not type bool", it.pos);
         }
-        it.work.accept(this);
+        if (it.work != null) {
+            if (it.work instanceof BlockNode) {
+                ((BlockNode) it.work).stmts.forEach(nxt->nxt.accept(this));
+            }
+            else {
+                it.work.accept(this);
+            }
+        }
         curScope = curScope.parentScope;
     }
 
@@ -270,8 +309,13 @@ public class SemanticChecker implements ASTVisitor {
     @Override
     public void visit(ReturnStmtNode it) {
 //        System.out.println("Return!");
-        it.returnVal.accept(this);
-        curScope.returned = it.returnVal.type;
+        if (it.returnVal != null) {
+            it.returnVal.accept(this);
+            curScope.returned = it.returnVal.type;
+        }
+        else {
+            curScope.returned = builtin.VoidType;
+        }
     }
 
     @Override
@@ -311,12 +355,33 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(DefineClassNode it) {
-
+        curScope = new Scope(curScope);
+        curScope.inClass = it;
+        for (var nxt: it.vars) {
+            nxt.accept(this);
+        }
+        if (it.constructor != null) {
+            if (!it.constructor.className.equals(it.className)) {
+                throw new semanticError("Constructor name fail to match", it.pos);
+            }
+            it.constructor.accept(this);
+        }
+        for (var nxt: it.functions) {
+            nxt.accept(this);
+        }
+        curScope = curScope.parentScope;
     }
 
     @Override
     public void visit(DefineConstructFunctionNode it) {
-
+        curScope = new Scope(curScope);
+        for (var nxt:it.stmts) {
+            nxt.accept(this);
+        }
+        if (!curScope.returned.equals(builtin.VoidType)) {
+            throw new semanticError("Constructor return type not void", it.pos);
+        }
+        curScope = curScope.parentScope;
     }
 
     @Override
@@ -340,12 +405,12 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(BlockNode it) {
-
+        //work done
     }
 
     @Override
     public void visit(TypeNameNode it) {
-
+        //should be inaccessible
     }
 
     @Override

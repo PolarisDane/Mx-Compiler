@@ -2,7 +2,11 @@ package AST;
 
 import Utils.*;
 
+import java.util.ArrayList;
+
 public class NewExprNode extends ExprNode {
+
+    public ArrayList<ExprNode> expr = new ArrayList<>();
 
     public NewExprNode(position pos) {
         super(pos);

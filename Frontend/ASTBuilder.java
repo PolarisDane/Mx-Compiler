@@ -249,6 +249,9 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
         NewExprNode newExpr = new NewExprNode(new position(ctx));
         newExpr.type.content = ctx.typeprefix().getText();
         newExpr.type.dim = ctx.LeftBracket().size();
+        for (var it: ctx.expression()) {
+            newExpr.expr.add((ExprNode) visit(it));
+        }
         return newExpr;
     }
 
