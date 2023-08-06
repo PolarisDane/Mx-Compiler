@@ -2015,7 +2015,7 @@ public class MxParser extends Parser {
 					consume();
 				}
 				setState(231);
-				expression(17);
+				expression(15);
 				}
 				break;
 			case 5:
@@ -2035,7 +2035,7 @@ public class MxParser extends Parser {
 					consume();
 				}
 				setState(233);
-				expression(16);
+				expression(14);
 				}
 				break;
 			case 6:
@@ -2274,11 +2274,51 @@ public class MxParser extends Parser {
 						break;
 					case 13:
 						{
-						_localctx = new Right_self_exprContext(new ExpressionContext(_parentctx, _parentState));
+						_localctx = new Array_exprContext(new ExpressionContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expression);
 						setState(276);
-						if (!(precpred(_ctx, 18))) throw new FailedPredicateException(this, "precpred(_ctx, 18)");
+						if (!(precpred(_ctx, 19))) throw new FailedPredicateException(this, "precpred(_ctx, 19)");
 						setState(277);
+						match(LeftBracket);
+						setState(278);
+						expression(0);
+						setState(279);
+						match(RightBracket);
+						}
+						break;
+					case 14:
+						{
+						_localctx = new Member_exprContext(new ExpressionContext(_parentctx, _parentState));
+						pushNewRecursionContext(_localctx, _startState, RULE_expression);
+						setState(281);
+						if (!(precpred(_ctx, 18))) throw new FailedPredicateException(this, "precpred(_ctx, 18)");
+						setState(282);
+						match(Dot);
+						setState(285);
+						_errHandler.sync(this);
+						switch ( getInterpreter().adaptivePredict(_input,23,_ctx) ) {
+						case 1:
+							{
+							setState(283);
+							match(Identifier);
+							}
+							break;
+						case 2:
+							{
+							setState(284);
+							funcCall();
+							}
+							break;
+						}
+						}
+						break;
+					case 15:
+						{
+						_localctx = new Right_self_exprContext(new ExpressionContext(_parentctx, _parentState));
+						pushNewRecursionContext(_localctx, _startState, RULE_expression);
+						setState(287);
+						if (!(precpred(_ctx, 16))) throw new FailedPredicateException(this, "precpred(_ctx, 16)");
+						setState(288);
 						((Right_self_exprContext)_localctx).op = _input.LT(1);
 						_la = _input.LA(1);
 						if ( !(_la==Increment || _la==Decrement) ) {
@@ -2288,46 +2328,6 @@ public class MxParser extends Parser {
 							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
 							_errHandler.reportMatch(this);
 							consume();
-						}
-						}
-						break;
-					case 14:
-						{
-						_localctx = new Array_exprContext(new ExpressionContext(_parentctx, _parentState));
-						pushNewRecursionContext(_localctx, _startState, RULE_expression);
-						setState(278);
-						if (!(precpred(_ctx, 15))) throw new FailedPredicateException(this, "precpred(_ctx, 15)");
-						setState(279);
-						match(LeftBracket);
-						setState(280);
-						expression(0);
-						setState(281);
-						match(RightBracket);
-						}
-						break;
-					case 15:
-						{
-						_localctx = new Member_exprContext(new ExpressionContext(_parentctx, _parentState));
-						pushNewRecursionContext(_localctx, _startState, RULE_expression);
-						setState(283);
-						if (!(precpred(_ctx, 14))) throw new FailedPredicateException(this, "precpred(_ctx, 14)");
-						setState(284);
-						match(Dot);
-						setState(287);
-						_errHandler.sync(this);
-						switch ( getInterpreter().adaptivePredict(_input,23,_ctx) ) {
-						case 1:
-							{
-							setState(285);
-							match(Identifier);
-							}
-							break;
-						case 2:
-							{
-							setState(286);
-							funcCall();
-							}
-							break;
 						}
 						}
 						break;
@@ -2520,11 +2520,11 @@ public class MxParser extends Parser {
 		case 11:
 			return precpred(_ctx, 2);
 		case 12:
-			return precpred(_ctx, 18);
+			return precpred(_ctx, 19);
 		case 13:
-			return precpred(_ctx, 15);
+			return precpred(_ctx, 18);
 		case 14:
-			return precpred(_ctx, 14);
+			return precpred(_ctx, 16);
 		}
 		return true;
 	}
@@ -2573,8 +2573,8 @@ public class MxParser extends Parser {
 		"\u0014\u0001\u0014\u0001\u0014\u0001\u0014\u0001\u0014\u0001\u0014\u0001"+
 		"\u0014\u0001\u0014\u0001\u0014\u0001\u0014\u0001\u0014\u0001\u0014\u0001"+
 		"\u0014\u0001\u0014\u0001\u0014\u0001\u0014\u0001\u0014\u0001\u0014\u0001"+
-		"\u0014\u0001\u0014\u0001\u0014\u0001\u0014\u0001\u0014\u0001\u0014\u0001"+
-		"\u0014\u0001\u0014\u0003\u0014\u0120\b\u0014\u0005\u0014\u0122\b\u0014"+
+		"\u0014\u0001\u0014\u0001\u0014\u0001\u0014\u0001\u0014\u0001\u0014\u0003"+
+		"\u0014\u011e\b\u0014\u0001\u0014\u0001\u0014\u0005\u0014\u0122\b\u0014"+
 		"\n\u0014\f\u0014\u0125\t\u0014\u0001\u0015\u0001\u0015\u0003\u0015\u0129"+
 		"\b\u0015\u0001\u0016\u0001\u0016\u0001\u0016\u0005\u0016\u012e\b\u0016"+
 		"\n\u0016\f\u0016\u0131\t\u0016\u0001\u0016\u0000\u0001(\u0017\u0000\u0002"+
@@ -2682,8 +2682,8 @@ public class MxParser extends Parser {
 		"\u00df\u0001\u0000\u0000\u0000\u00e2\u00e5\u0001\u0000\u0000\u0000\u00e3"+
 		"\u00e1\u0001\u0000\u0000\u0000\u00e3\u00e4\u0001\u0000\u0000\u0000\u00e4"+
 		"\u00ec\u0001\u0000\u0000\u0000\u00e5\u00e3\u0001\u0000\u0000\u0000\u00e6"+
-		"\u00e7\u0007\u0001\u0000\u0000\u00e7\u00ec\u0003(\u0014\u0011\u00e8\u00e9"+
-		"\u0007\u0002\u0000\u0000\u00e9\u00ec\u0003(\u0014\u0010\u00ea\u00ec\u0007"+
+		"\u00e7\u0007\u0001\u0000\u0000\u00e7\u00ec\u0003(\u0014\u000f\u00e8\u00e9"+
+		"\u0007\u0002\u0000\u0000\u00e9\u00ec\u0003(\u0014\u000e\u00ea\u00ec\u0007"+
 		"\u0003\u0000\u0000\u00eb\u00c7\u0001\u0000\u0000\u0000\u00eb\u00cc\u0001"+
 		"\u0000\u0000\u0000\u00eb\u00cd\u0001\u0000\u0000\u0000\u00eb\u00e6\u0001"+
 		"\u0000\u0000\u0000\u00eb\u00e8\u0001\u0000\u0000\u0000\u00eb\u00ea\u0001"+
@@ -2705,20 +2705,20 @@ public class MxParser extends Parser {
 		"\u0003(\u0014\u0000\u010e\u010f\u00057\u0000\u0000\u010f\u0110\u0003("+
 		"\u0014\u0003\u0110\u0122\u0001\u0000\u0000\u0000\u0111\u0112\n\u0002\u0000"+
 		"\u0000\u0112\u0113\u0005)\u0000\u0000\u0113\u0122\u0003(\u0014\u0002\u0114"+
-		"\u0115\n\u0012\u0000\u0000\u0115\u0122\u0007\u0001\u0000\u0000\u0116\u0117"+
-		"\n\u000f\u0000\u0000\u0117\u0118\u00050\u0000\u0000\u0118\u0119\u0003"+
-		"(\u0014\u0000\u0119\u011a\u00051\u0000\u0000\u011a\u0122\u0001\u0000\u0000"+
-		"\u0000\u011b\u011c\n\u000e\u0000\u0000\u011c\u011f\u0005\u001d\u0000\u0000"+
-		"\u011d\u0120\u0005;\u0000\u0000\u011e\u0120\u0003&\u0013\u0000\u011f\u011d"+
-		"\u0001\u0000\u0000\u0000\u011f\u011e\u0001\u0000\u0000\u0000\u0120\u0122"+
-		"\u0001\u0000\u0000\u0000\u0121\u00ed\u0001\u0000\u0000\u0000\u0121\u00f0"+
+		"\u0115\n\u0013\u0000\u0000\u0115\u0116\u00050\u0000\u0000\u0116\u0117"+
+		"\u0003(\u0014\u0000\u0117\u0118\u00051\u0000\u0000\u0118\u0122\u0001\u0000"+
+		"\u0000\u0000\u0119\u011a\n\u0012\u0000\u0000\u011a\u011d\u0005\u001d\u0000"+
+		"\u0000\u011b\u011e\u0005;\u0000\u0000\u011c\u011e\u0003&\u0013\u0000\u011d"+
+		"\u011b\u0001\u0000\u0000\u0000\u011d\u011c\u0001\u0000\u0000\u0000\u011e"+
+		"\u0122\u0001\u0000\u0000\u0000\u011f\u0120\n\u0010\u0000\u0000\u0120\u0122"+
+		"\u0007\u0001\u0000\u0000\u0121\u00ed\u0001\u0000\u0000\u0000\u0121\u00f0"+
 		"\u0001\u0000\u0000\u0000\u0121\u00f3\u0001\u0000\u0000\u0000\u0121\u00f6"+
 		"\u0001\u0000\u0000\u0000\u0121\u00f9\u0001\u0000\u0000\u0000\u0121\u00fc"+
 		"\u0001\u0000\u0000\u0000\u0121\u00ff\u0001\u0000\u0000\u0000\u0121\u0102"+
 		"\u0001\u0000\u0000\u0000\u0121\u0105\u0001\u0000\u0000\u0000\u0121\u0108"+
 		"\u0001\u0000\u0000\u0000\u0121\u010b\u0001\u0000\u0000\u0000\u0121\u0111"+
-		"\u0001\u0000\u0000\u0000\u0121\u0114\u0001\u0000\u0000\u0000\u0121\u0116"+
-		"\u0001\u0000\u0000\u0000\u0121\u011b\u0001\u0000\u0000\u0000\u0122\u0125"+
+		"\u0001\u0000\u0000\u0000\u0121\u0114\u0001\u0000\u0000\u0000\u0121\u0119"+
+		"\u0001\u0000\u0000\u0000\u0121\u011f\u0001\u0000\u0000\u0000\u0122\u0125"+
 		"\u0001\u0000\u0000\u0000\u0123\u0121\u0001\u0000\u0000\u0000\u0123\u0124"+
 		"\u0001\u0000\u0000\u0000\u0124)\u0001\u0000\u0000\u0000\u0125\u0123\u0001"+
 		"\u0000\u0000\u0000\u0126\u0129\u0003\u0002\u0001\u0000\u0127\u0129\u0005"+
@@ -2729,7 +2729,7 @@ public class MxParser extends Parser {
 		"\u0001\u0000\u0000\u0000\u012f\u0130\u0001\u0000\u0000\u0000\u0130-\u0001"+
 		"\u0000\u0000\u0000\u0131\u012f\u0001\u0000\u0000\u0000\u001c13>IKUgpx"+
 		"{\u0086\u008f\u009b\u009e\u00a2\u00af\u00b6\u00bd\u00c3\u00d5\u00dc\u00e3"+
-		"\u00eb\u011f\u0121\u0123\u0128\u012f";
+		"\u00eb\u011d\u0121\u0123\u0128\u012f";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

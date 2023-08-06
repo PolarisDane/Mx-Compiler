@@ -252,6 +252,7 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
         NewExprNode newExpr = new NewExprNode(new position(ctx));
         newExpr.type.content = ctx.typeprefix().getText();
         newExpr.type.dim = ctx.LeftBracket().size();
+        newExpr.type.isReference = true;
         for (var it: ctx.expression()) {
             newExpr.expr.add((ExprNode) visit(it));
         }
@@ -294,6 +295,7 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitArray_expr(MxParser.Array_exprContext ctx) {
         ArrayExprNode arrayExpr = new ArrayExprNode(new position(ctx), (ExprNode) visit(ctx.expression(0)), (ExprNode) visit(ctx.expression(1)));
+        arrayExpr.content = arrayExpr.array.content;
         return arrayExpr;
     }
 

@@ -78,12 +78,12 @@ funcCall: Identifier LeftParenthesis exprList? RightParenthesis;
 expression:
 	LeftParenthesis expression RightParenthesis #wrap_expr
     | funcCall #func_expr//maybe needed to be swapped with member_expr
+    | expression LeftBracket expression RightBracket #array_expr
+    | expression Dot (Identifier | funcCall) #member_expr
     | New typeprefix (LeftBracket expression RightBracket)* (LeftBracket RightBracket)* (LeftParenthesis RightParenthesis)* #new_expr
     | expression op = (Increment | Decrement) #right_self_expr
     | <assoc = right> op = (Increment | Decrement) expression #left_self_expr
     | <assoc = right> op = (Not | BitInv | Add | Sub) expression #single_expr
-    | expression LeftBracket expression RightBracket #array_expr
-    | expression Dot (Identifier | funcCall) #member_expr
     | l = expression op = (Mul | Div | Mod) r = expression #binary_expr
     | l = expression op = (Add | Sub) r = expression #binary_expr
     | l = expression op = (LeftShift | RightShift) r = expression #binary_expr

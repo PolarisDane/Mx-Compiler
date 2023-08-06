@@ -40,9 +40,9 @@ public class Builtin {
         paramsListString.types.add(StringType);
         paramsListString.identifiers.add("str");
         printFunc.type = VoidType;
-        printFunc.paramsList = paramsListInt;
+        printFunc.paramsList = paramsListString;
         printlnFunc.type = VoidType;
-        printlnFunc.paramsList = paramsListInt;
+        printlnFunc.paramsList = paramsListString;
         printIntFunc.type = VoidType;
         printIntFunc.paramsList = paramsListInt;
         printlnIntFunc.type = VoidType;
@@ -52,7 +52,7 @@ public class Builtin {
         getIntFunc.type = IntType;
         getIntFunc.paramsList = null;
         toStringFunc.type = StringType;
-        toStringFunc.paramsList = paramsListString;
+        toStringFunc.paramsList = paramsListInt;
 
         ParamsListNode paramsListSubstring = new ParamsListNode(null);
         paramsListSubstring.types.add(IntType);
