@@ -8,7 +8,9 @@ LineComment: '//' .*? (NewLine | EOF);
 BlockComment: '/*' .*? '*/';
 //using .*? must set an end or else it will stop immediately
 
-String: '"' .*? '"';
+fragment Escape: '\n' | '\\\\' | '\\"';
+
+String: '"' (Escape | .)*? '"';
 //escape character not dealt with yet
 
 Int: 'int';

@@ -8,10 +8,11 @@ public class Scope {
     public HashMap<String, Type> varMap = new HashMap<>();
     public Scope parentScope = null;
     public DefineClassNode inClass = null;
-    public DefineFunctionNode inFunc = null;
     public boolean inLoop = false;
-
-    public Type returned = null;
+    public DefineFunctionNode inFunc;
+    public boolean inConstructor = false;
+    public boolean returned = false;
+    public Scope returnScope;
 
     public Scope() {}
 
@@ -19,6 +20,9 @@ public class Scope {
         this.parentScope = parentScope;
         this.inClass = parentScope.inClass;
         this.inFunc = parentScope.inFunc;
+        this.inConstructor = parentScope.inConstructor;
+        this.inLoop = parentScope.inLoop;
+        this.returnScope = parentScope.returnScope;
     }
 
     public void defineVariable(String name, Type type, position pos) {

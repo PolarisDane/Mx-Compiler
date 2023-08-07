@@ -16,7 +16,19 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(FuncCallNode it) {
-        DefineFunctionNode funcNode = gScope.getFunc(it.func, it.pos);
+        DefineFunctionNode funcNode;
+        if (it.inClass == null && curScope.inClass != null) {
+            it.inClass = curScope.inClass;
+        }
+        if (it.inClass == null) {
+            funcNode = gScope.getFunc(it.func, it.pos);
+        }
+        else {
+            funcNode = it.inClass.funcMap.get(it.func);
+            if (funcNode == null) {
+                funcNode = gScope.getFunc(it.func, it.pos);
+            }
+        }
         if (funcNode.paramsList == null && it.args == null){
             it.type = funcNode.type;
             return;
@@ -29,6 +41,9 @@ public class SemanticChecker implements ASTVisitor {
         for (int i = 0; i < siz; i++) {
             Type expected = funcNode.paramsList.types.get(i);
             Type given = it.args.exprs.get(i).type;
+            if ((expected.isReference) && given.equals(builtin.NullType)) {
+                continue;
+            }
             if (!given.equals(expected)) {
                 throw new semanticError("Function " + it.func + " argument " + funcNode.paramsList.identifiers.get(i) + " expected type " + expected.content + ", got " + given.content, it.pos);
             }
@@ -38,6 +53,9 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(NewExprNode it) {
+        if (it.type.content.equals("void")) {
+            throw new semanticError("Type void should not be used in a new expression", it.pos);
+        }
         if (it.expr != null) {
             for (var nxt : it.expr) {
                 nxt.accept(this);
@@ -55,7 +73,7 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(ArrayExprNode it) {
-        System.out.println("Array visited in semantic");
+//        System.out.println("Array visited in semantic");
         if (it.array instanceof AtomExprNode) {
             if (!curScope.containsVariable(it.content, true)) {
                 throw new semanticError("Array " + it.array.content + " not defined", it.pos);
@@ -72,23 +90,33 @@ public class SemanticChecker implements ASTVisitor {
             throw new semanticError("Array dimension not available", it.pos);
         }
         it.type = new Type(it.array.type.content, it.array.type.dim - 1);
-        System.out.println(it.type.content);
-        System.out.println(it.type.dim);
+//        System.out.println(it.type.content);
+//        System.out.println(it.type.dim);
     }
 
     @Override
     public void visit(MemberExprNode it) {
         it.obj.accept(this);
-        DefineClassNode classNode = gScope.getClass(it.obj.type.content, it.pos);
+        DefineClassNode classNode;
+        System.out.println("MemberExpr visited");
+        if (it.obj instanceof AtomExprNode && it.obj.content.equals("this")) {
+            classNode = curScope.inClass;
+        }
+        else {
+            classNode = gScope.getClass(it.obj.type.content, it.pos);
+//            System.out.println(classNode.className);
+        }
         if (it.memberFunc != null) {
             if (it.obj.type.dim > 0) {
                 if (it.memberFunc.func.equals("size")) {
+                    it.type = builtin.IntType;
                     return;
                 }
             }
             if (!classNode.funcMap.containsKey(it.memberFunc.func)) {
                 throw new semanticError("Member function " + it.memberFunc.func + " not defined in class " + it.obj.type.content, it.pos);
             }
+            it.memberFunc.inClass = classNode;
             it.memberFunc.accept(this);
             it.type = it.memberFunc.type;
         }
@@ -203,15 +231,23 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(TernaryExprNode it) {
+        it.condition.accept(this);
         if (!it.condition.type.equals(builtin.BoolType)) {
             throw new semanticError("Condition type isn't bool type in ternary expression", it.pos);
         }
-        it.condition.accept(this);
-        if (!it.trueVal.type.equals(it.falseVal.type)) {
-            throw new semanticError("Expression of different types in ternary expression", it.pos);
-        }
         it.trueVal.accept(this);
         it.falseVal.accept(this);
+        if (!it.trueVal.type.equals(it.falseVal.type)) {
+            if (it.trueVal.type.equals(builtin.NullType) && it.falseVal.type.isReference) {
+                it.type = it.falseVal.type;
+                return;
+            }
+            if (it.falseVal.type.equals(builtin.NullType) && it.trueVal.type.isReference) {
+                it.type = it.trueVal.type;
+                return;
+            }
+            throw new semanticError("Expression of different types in ternary expression", it.pos);
+        }
         it.type = it.trueVal.type;
     }
 
@@ -220,12 +256,17 @@ public class SemanticChecker implements ASTVisitor {
         it.assignTo.accept(this);
         it.assignVal.accept(this);
 //        System.out.println(it.assignTo.type.content);
+//        System.out.println(it.assignTo.type.dim);
 //        System.out.println(it.assignVal.type.content);
-        if (!it.assignTo.type.equals(it.assignVal.type)) {
-            throw new semanticError("Assigning value of a different type to " + it.assignTo.content, it.pos);
-        }
+//        System.out.println(it.assignVal.type.dim);
         if (!it.assignTo.isAssignable()) {
             throw new semanticError("Assigning to a non-left value", it.pos);
+        }
+        if (it.assignTo.type.isReference && it.assignVal.type.equals(builtin.NullType)) {
+            return;
+        }
+        if (!it.assignTo.type.equals(it.assignVal.type)) {
+            throw new semanticError("Assigning value of a different type to " + it.assignTo.content, it.pos);
         }
     }
 
@@ -234,6 +275,9 @@ public class SemanticChecker implements ASTVisitor {
 //        System.out.println(it.content);
         if (it.content.equals("this") && curScope.inClass == null) {
             throw new semanticError("This used outside any class", it.pos);
+        }
+        if (it.content.equals("this")) {
+            it.type.content = curScope.inClass.className;
         }
         if (it.isIdentifier) {
             if (!curScope.containsVariable(it.content, true)) {
@@ -252,7 +296,9 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(ExprStmtNode it) {
-        it.exprList.accept(this);
+        if (it.exprList != null) {
+            it.exprList.accept(this);
+        }
     }
 
     @Override
@@ -357,18 +403,27 @@ public class SemanticChecker implements ASTVisitor {
         if (it.returnVal != null) {
             it.returnVal.accept(this);
         }
-        else {
-            it.returnVal.type = builtin.VoidType;
+        if (curScope.inConstructor) {
+            if (it.returnVal != null && !it.returnVal.type.equals(builtin.VoidType)) {
+                throw new semanticError("Constructor return type not void", it.pos);
+            }
+            return;
         }
         if (curScope.inFunc == null) {
             throw new semanticError("Return statement found outside any function", it.pos);
         }
-//        if (!it.returnVal.type.equals(builtin.VoidType) && curScope.returned == null && !it.funcName.equals("main")) {
-//            throw new semanticError("Function " + it.funcName + " missing return statement", it.pos);
-//        }
-//        if (curScope.returned != null && !it.type.equals(builtin.VoidType) && !it.type.equals(curScope.returned)) {
-//            throw new semanticError("Function " + it.funcName + " returned value is not of expected type", it.pos);
-//        }
+        if (it.returnVal == null && curScope.inFunc.type.equals(builtin.VoidType)) {
+            curScope.returnScope.returned = true;
+            return;
+        }
+        if (it.returnVal.type.equals(builtin.NullType) && curScope.inFunc.type.isReference) {
+            curScope.returnScope.returned = true;
+            return;
+        }
+        if (!curScope.inFunc.type.equals(it.returnVal.type)) {
+            throw new semanticError("Function " + curScope.inFunc.funcName + " returned value is not of expected type", it.pos);
+        }
+        curScope.returnScope.returned = true;
     }
 
     @Override
@@ -376,8 +431,8 @@ public class SemanticChecker implements ASTVisitor {
         if (!gScope.containsClass(it.type.content, it.pos)) {
             throw new semanticError("Defined type " + it.type.content + " not found", it.pos);
         }
-        if (it.type.equals(builtin.VoidType)) {
-            throw new semanticError("Type void should not be used here", it.pos);
+        if (it.type.content.equals("void")) {
+            throw new semanticError("Type void should not be used as a variable type", it.pos);
         }
         for (var nxt: it.assigns) {
             nxt.accept(this);
@@ -386,8 +441,13 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(VarAssignStmtNode it) {
+        System.out.println("VarAssign visited");
         if (it.assignVal != null) {
             it.assignVal.accept(this);
+            if (it.assignVal.type.equals(builtin.NullType) && it.type.isReference) {
+                curScope.defineVariable(it.assignTo, it.type, it.pos);
+                return;
+            }
             if (!it.type.equals(it.assignVal.type)) {
                 throw new semanticError("Assigning value of a different type to " + it.assignTo, it.pos);
             }
@@ -428,32 +488,41 @@ public class SemanticChecker implements ASTVisitor {
     @Override
     public void visit(DefineConstructFunctionNode it) {
         curScope = new Scope(curScope);
+        curScope.returnScope = curScope;
+        curScope.inConstructor = true;
         for (var nxt:it.stmts) {
             nxt.accept(this);
-        }
-        if (!curScope.returned.equals(builtin.VoidType)) {
-            throw new semanticError("Constructor return type not void", it.pos);
         }
         curScope = curScope.parentScope;
     }
 
     @Override
     public void visit(DefineFunctionNode it) {
+        System.out.println("Define function visited");
         curScope = new Scope(curScope);
         curScope.inFunc = it;
+        curScope.returnScope = curScope;
         if (it.paramsList != null) {
             it.paramsList.accept(this);
         }
 //        System.out.println("stmts size: " + it.stmts.size());
+//        System.out.println("Here in " + it.funcName);
         for (var nxt: it.stmts) {
             nxt.accept(this);
+        }
+        if (!it.type.equals(builtin.VoidType) && !curScope.returned && !it.funcName.equals("main")) {
+            throw new semanticError("Function " + it.funcName + " missing return statement", it.pos);
         }
         curScope = curScope.parentScope;//return to original scope
     }
 
     @Override
     public void visit(BlockNode it) {
-        //work done
+        curScope = new Scope(curScope);
+        for (var nxt: it.stmts) {
+            nxt.accept(this);
+        }
+        curScope = curScope.parentScope;
     }
 
     @Override

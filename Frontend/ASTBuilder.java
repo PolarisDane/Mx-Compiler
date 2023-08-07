@@ -3,6 +3,7 @@ package Frontend;
 import AST.*;
 import Parser.*;
 import Utils.*;
+import Utils.error.semanticError;
 
 public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
     private Scope gScope;
@@ -251,10 +252,21 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
     public ASTNode visitNew_expr(MxParser.New_exprContext ctx) {
         NewExprNode newExpr = new NewExprNode(new position(ctx));
         newExpr.type.content = ctx.typeprefix().getText();
-        newExpr.type.dim = ctx.LeftBracket().size();
+        newExpr.type.dim = ctx.newArrayList().size();
         newExpr.type.isReference = true;
-        for (var it: ctx.expression()) {
-            newExpr.expr.add((ExprNode) visit(it));
+        boolean flag = true;
+        for (var it: ctx.newArrayList()) {
+            if (it.expression() != null) {
+                if (flag) {
+                    newExpr.expr.add((ExprNode) visit(it.expression()));
+                }
+                else {
+                    throw new semanticError("New expression syntax error", newExpr.pos);
+                }
+            }
+            else {
+                flag = false;
+            }
         }
         return newExpr;
     }

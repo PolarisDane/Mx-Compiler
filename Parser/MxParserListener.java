@@ -209,6 +209,16 @@ public interface MxParserListener extends ParseTreeListener {
 	 */
 	void exitFuncCall(MxParser.FuncCallContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link MxParser#newArrayList}.
+	 * @param ctx the parse tree
+	 */
+	void enterNewArrayList(MxParser.NewArrayListContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MxParser#newArrayList}.
+	 * @param ctx the parse tree
+	 */
+	void exitNewArrayList(MxParser.NewArrayListContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code wrap_expr}
 	 * labeled alternative in {@link MxParser#expression}.
 	 * @param ctx the parse tree

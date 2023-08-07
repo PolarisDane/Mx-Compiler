@@ -17,6 +17,7 @@ public class GlobalScope extends Scope  {
         funcMap.put("printInt", builtin.printIntFunc);
         funcMap.put("printlnInt", builtin.printlnIntFunc);
         funcMap.put("getString", builtin.getStringFunc);
+        funcMap.put("getInt", builtin.getIntFunc);
         funcMap.put("toString", builtin.toStringFunc);
         classMap.put("int", builtin.intClass);
         classMap.put("string", builtin.stringClass);

@@ -132,6 +132,12 @@ public interface MxParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitFuncCall(MxParser.FuncCallContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link MxParser#newArrayList}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitNewArrayList(MxParser.NewArrayListContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code wrap_expr}
 	 * labeled alternative in {@link MxParser#expression}.
 	 * @param ctx the parse tree
