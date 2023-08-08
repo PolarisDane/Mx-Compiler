@@ -30,7 +30,6 @@ public class main {
             ParseTree parserTreeRoot = parser.file_input();
             ASTBuilder astBuilder = new ASTBuilder(gScope);
             ASTRoot = (RootNode) astBuilder.visit(parserTreeRoot);
-            System.out.println("Symbol collect-----------------------------");
             new SymbolCollector(gScope).visit(ASTRoot);
             new SemanticChecker(gScope).visit(ASTRoot);
         } catch (error err) {
