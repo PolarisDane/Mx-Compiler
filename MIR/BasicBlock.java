@@ -9,6 +9,7 @@ import java.util.LinkedList;
 public class BasicBlock {
     public String label;
     public LinkedList<IRBaseInst> insts = new LinkedList<>();
+    public IRBaseInst terminal;
     public boolean returned = false;
 
     public BasicBlock(String label) {

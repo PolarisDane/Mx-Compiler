@@ -5,7 +5,7 @@ import MIR.Type.IRNullType;
 
 public class IRNullConst extends IRConst{
 
-    public IRNullConst(int val) {
+    public IRNullConst() {
         super(new IRNullType());
     }
 

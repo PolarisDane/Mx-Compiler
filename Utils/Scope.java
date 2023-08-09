@@ -2,9 +2,11 @@ package Utils;
 
 import java.util.HashMap;
 import AST.*;
+import MIR.Entity.IRRegister;
 import Utils.error.semanticError;
 
 public class Scope {
+    public HashMap<String, IRRegister> entityMap = new HashMap<>();
     public HashMap<String, Type> varMap = new HashMap<>();
     public Scope parentScope = null;
     public DefineClassNode inClass = null;
