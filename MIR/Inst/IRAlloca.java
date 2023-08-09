@@ -19,3 +19,4 @@ public class IRAlloca extends IRBaseInst{
         return res + " = alloca " + type;
     }
 }
+//done

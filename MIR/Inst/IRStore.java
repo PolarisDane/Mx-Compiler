@@ -20,3 +20,4 @@ public class IRStore extends IRBaseInst{
         return "store " + val.type.toString() + " " + val.toString() + ", ptr " + reg.toString();
     }
 }
+//done
