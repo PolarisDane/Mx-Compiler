@@ -11,6 +11,7 @@ public class IRRegister extends Entity {
         super(type);
         this.name = name;
         this.id = cnt++;
+//        System.out.println(cnt);
     }
 
     @Override

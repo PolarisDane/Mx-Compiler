@@ -12,8 +12,13 @@ public class BasicBlock {
     public IRBaseInst terminal;
     public boolean returned = false;
 
+    public static int cnt = 0;
+
+    public int id;
+
     public BasicBlock(String label) {
-        this.label = label;
+        id = cnt++;
+        this.label = label + id;
     }
 
     public void addInst(IRBaseInst inst) {

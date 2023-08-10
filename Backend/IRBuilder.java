@@ -18,6 +18,25 @@ public class IRBuilder implements ASTVisitor {
         this.curScope = gScope;
     }
 
+    public Entity getVal(ExprNode expr, boolean is_i1) {
+        IRRegister res = new IRRegister("", new IRIntType(1));
+        if (expr.entity != null) {
+            if (is_i1 && expr.entity.type.size == 8) {
+                curBlock.addInst(new IRTrunc(curBlock, res, expr.entity.type, expr.entity, new IRIntType(1)));
+                return res;
+            }//is stored as 8-bit and used as 1-bit
+            return expr.entity;
+        }//const value already given
+        IRRegister loadVal = new IRRegister("", expr.addr.type);
+        curBlock.addInst(new IRLoad(curBlock, expr.addr.type, loadVal, expr.addr));
+        expr.entity = loadVal;//for later use
+        if (is_i1 && loadVal.type.size == 8) {
+            curBlock.addInst(new IRTrunc(curBlock, res, loadVal.type, loadVal, new IRIntType(1)));
+            return res;
+        }
+        return expr.entity;
+    }
+
     public IRBaseType getIRType(Type type) {
         IRBaseType IRType = null;
         switch (type.content) {
@@ -54,7 +73,7 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(WrapExprNode it) {
-
+        //should be inaccessible
     }
 
     @Override
@@ -69,17 +88,52 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(RightSelfExprNode it) {
-
+        it.obj.accept(this);
+        IRRegister res = new IRRegister("self_expr" , new IRIntType(32));
+        Entity ori = getVal(it.obj, false);
+        if (it.op.equals("++")) {
+            curBlock.addInst(new IRBinaryOp(curBlock, res, new IRIntType(32), "add", ori, new IRIntConst(1)));
+            curBlock.addInst(new IRStore(curBlock, it.obj.addr, res));
+        }
+        else if (it.op.equals("--")) {
+            curBlock.addInst(new IRBinaryOp(curBlock, res, new IRIntType(32), "sub", ori, new IRIntConst(1)));
+            curBlock.addInst(new IRStore(curBlock, it.obj.addr, res));
+        }
+        it.entity = ori;
     }
 
     @Override
     public void visit(LeftSelfExprNode it) {
-
+        it.obj.accept(this);
+        IRRegister res = new IRRegister("self_expr" , new IRIntType(32));
+        if (it.op.equals("++")) {
+            curBlock.addInst(new IRBinaryOp(curBlock, res, new IRIntType(32), "add", getVal(it.obj, false), new IRIntConst(1)));
+            curBlock.addInst(new IRStore(curBlock, it.obj.addr, res));
+        }
+        else if (it.op.equals("--")) {
+            curBlock.addInst(new IRBinaryOp(curBlock, res, new IRIntType(32), "sub", getVal(it.obj, false), new IRIntConst(1)));
+            curBlock.addInst(new IRStore(curBlock, it.obj.addr, res));
+        }
+        it.entity = res;
     }
 
     @Override
     public void visit(SingleExprNode it) {
-
+        it.obj.accept(this);
+        IRRegister res = new IRRegister("single_expr" , new IRIntType(32));
+        if (it.op.equals("+")) {
+            //nothing here
+        }
+        else if (it.op.equals("-")) {
+            curBlock.addInst(new IRBinaryOp(curBlock, res, new IRIntType(32), "sub", new IRIntConst(0), getVal(it.obj, false)));
+        }
+        else if (it.op.equals("!")) {
+            curBlock.addInst(new IRBinaryOp(curBlock, res, new IRIntType(8), "xor", new IRIntConst(1), getVal(it.obj, false)));
+        }
+        else if (it.op.equals("~")) {
+            curBlock.addInst(new IRBinaryOp(curBlock, res, new IRIntType(32), "xor", new IRIntConst(-1), getVal(it.obj, false)));
+        }
+        it.entity = res;
     }
 
     @Override
@@ -87,50 +141,80 @@ public class IRBuilder implements ASTVisitor {
         it.lop.accept(this);
         IRRegister res = new IRRegister("binary_op", new IRIntType(32));
         if (!it.op.equals("&&") && !it.op.equals("||")) {
-            String op;
+            String op = null;
             it.rop.accept(this);
+            boolean flag = false;
             switch(it.op) {
                 case "+":
                     op = "add";
+                    flag = true;
+                    break;
                 case "-":
                     op = "sub";
+                    flag = true;
+                    break;
                 case "*":
                     op = "mul";
+                    flag = true;
+                    break;
                 case "/":
                     op = "sdiv";
+                    flag = true;
+                    break;
                 case "%":
                     op = "srem";
+                    flag = true;
+                    break;
                 case "&":
                     op = "and";
+                    flag = true;
+                    break;
                 case "|":
                     op = "or";
+                    flag = true;
+                    break;
                 case "<<":
                     op = "shl";
+                    flag = true;
+                    break;
                 case ">>":
                     op = "ashr";
+                    flag = true;
+                    break;
                 case "^":
                     op = "xor";
-                    curBlock.addInst(new IRBinaryOp(curBlock, res, new IRIntType(32), op, it.lop.entity, it.rop.entity));
+                    flag = true;
                     break;
                 case ">=":
                     op = "sge";
+                    break;
                 case "<=":
                     op = "sle";
+                    break;
                 case ">":
                     op = "sgt";
+                    break;
                 case "<":
                     op = "slt";
+                    break;
                 case "==":
                     op = "eq";
+                    break;
                 case "!=":
                     op = "ne";
-                    curBlock.addInst(new IRIcmp(curBlock, res, op, new IRIntType(32), it.lop.entity, it.rop.entity));
                     break;
+            }
+            if (flag) {
+                curBlock.addInst(new IRBinaryOp(curBlock, res, new IRIntType(32), op, getVal(it.lop, false), getVal(it.rop, false)));
+            }
+            else {
+                curBlock.addInst(new IRIcmp(curBlock, res, op, new IRIntType(32), getVal(it.lop, false), getVal(it.rop, false)));
             }
         }//non short-circuit value
         else {
 
         }//short-circuit value
+        it.addr = res;
     }
 
     @Override
@@ -145,6 +229,7 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(AtomExprNode it) {
+        System.out.println(it.content);
         if (it.isIdentifier) {
             it.addr = curScope.entityMap.get(it.content);
         }
@@ -185,7 +270,30 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(IfStmtNode it) {
+        it.condition.accept(this);
+        BasicBlock prev = curBlock;
+        BasicBlock trueBranch = new BasicBlock("if.then");
+        BasicBlock falseBranch = new BasicBlock("if.else");
+        BasicBlock endIf = new BasicBlock("if.end");
 
+        curScope = new Scope(curScope);
+        curBlock = trueBranch;
+        it.trueThenWork.accept(this);
+        trueBranch.addInst(new IRJump(curBlock, endIf.label));
+        curScope = curScope.parentScope;
+
+        if (it.falseThenWork != null) {
+            curScope = new Scope(curScope);
+            curBlock = falseBranch;
+            it.falseThenWork.accept(this);
+            falseBranch.addInst(new IRJump(curBlock, endIf.label));
+            curScope = curScope.parentScope;
+            prev.addInst(new IRBranch(prev, getVal(it.condition, true), trueBranch, falseBranch));
+        }
+        else {
+            prev.addInst(new IRBranch(prev, getVal(it.condition, true), trueBranch, endIf));
+        }
+        curBlock = endIf;
     }
 
     @Override
@@ -200,7 +308,7 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(FlowStmtNode it) {
-
+        //should be inaccessible
     }
 
     @Override
@@ -233,11 +341,7 @@ public class IRBuilder implements ASTVisitor {
         curBlock.addInst(new IRAlloca(curBlock, IRType, addr));
         if (it.assignVal != null) {
             it.assignVal.accept(this);
-            if (it.assignVal.entity == null) {
-                IRRegister res = new IRRegister("var", getIRType(it.type));
-                curBlock.addInst(new IRLoad(curBlock, getIRType(it.type), res, curScope.entityMap.get(it.assignVal.content)));
-            }
-            curBlock.addInst(new IRStore(curBlock, addr, it.assignVal.entity));
+            curBlock.addInst(new IRStore(curBlock, addr, getVal(it.assignVal, false)));
         }
     }
 
