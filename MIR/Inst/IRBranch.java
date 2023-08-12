@@ -17,7 +17,7 @@ public class IRBranch extends IRBaseInst {
 
     @Override
     public String toString() {
-        return "br i1 " + condition.toString() + ", label " + trueThenWork + ", label " + falseThenWork;
+        return "br i1 " + condition.toString() + ", label " + trueThenWork.label + ", label " + falseThenWork.label;
     }
 }
 //done

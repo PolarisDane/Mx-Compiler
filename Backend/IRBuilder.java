@@ -11,7 +11,9 @@ public class IRBuilder implements ASTVisitor {
     public Builtin builtin = new Builtin();
     public Scope curScope;
     public GlobalScope gScope;
-    public BasicBlock curBlock = new BasicBlock("entry");
+    public BasicBlock curBlock = null;
+
+    public Function inFunc = null;
 
     public IRBuilder(GlobalScope gScope) {
         this.gScope = gScope;
@@ -63,7 +65,28 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(FuncCallNode it) {
-
+        DefineFunctionNode funcNode;
+        if (it.inClass == null && curScope.inClass != null) {
+            it.inClass = curScope.inClass;
+        }
+        if (it.inClass == null) {
+            funcNode = gScope.getFunc(it.func, it.pos);
+        }
+        else {
+            funcNode = it.inClass.funcMap.get(it.func);
+            if (funcNode == null) {
+                funcNode = gScope.getFunc(it.func, it.pos);
+            }
+        }
+        IRCall callInst = new IRCall(curBlock, new IRRegister("func." + funcNode.funcName, getIRType(funcNode.type)), getIRType(funcNode.type), funcNode.funcName);
+        if (it.args != null) {
+            it.args.accept(this);
+        }
+        for (int i = 0; i < it.args.exprs.size(); i++) {
+            callInst.args.add(getVal(it.args.exprs.get(i), false));
+        }
+        curBlock.addInst(callInst);
+        it.entity = callInst.res;
     }
 
     @Override
@@ -139,7 +162,6 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(BinaryExprNode it) {
         it.lop.accept(this);
-        IRRegister res = new IRRegister("binary_op", new IRIntType(32));
         if (!it.op.equals("&&") && !it.op.equals("||")) {
             String op = null;
             it.rop.accept(this);
@@ -205,21 +227,94 @@ public class IRBuilder implements ASTVisitor {
                     break;
             }
             if (flag) {
+                IRRegister res = new IRRegister("binary_op", new IRIntType(32));
                 curBlock.addInst(new IRBinaryOp(curBlock, res, new IRIntType(32), op, getVal(it.lop, false), getVal(it.rop, false)));
+                it.addr = res;
             }
             else {
-                curBlock.addInst(new IRIcmp(curBlock, res, op, new IRIntType(32), getVal(it.lop, false), getVal(it.rop, false)));
+                IRRegister res = new IRRegister("binary_op", new IRIntType(1));
+                curBlock.addInst(new IRIcmp(curBlock, res, op, new IRIntType(1), getVal(it.lop, false), getVal(it.rop, false)));
+                it.addr = res;
             }
         }//non short-circuit value
         else {
+            IRRegister res = new IRRegister("binary_op", new IRIntType(32));
+            Entity noZext;
+            IRRegister zext = new IRRegister("zero_extended", new IRIntType(8));
+            curBlock.addInst(new IRAlloca(curBlock, new IRIntType(8), res));
+            BasicBlock rightBranch = new BasicBlock("binary_op.rhs", inFunc);
+            BasicBlock shortCircuitbranch = new BasicBlock("binary_op.short", inFunc);
+            BasicBlock endBinaryOp = new BasicBlock("binary_op.end", inFunc);
+            BasicBlock prev = curBlock;
+            if (it.op.equals("&&")) {
+                prev.addInst(new IRBranch(curBlock, getVal(it.lop, true), rightBranch, shortCircuitbranch));
 
+                curBlock = rightBranch;
+                it.rop.accept(this);
+                noZext = getVal(it.rop, true);
+                curBlock.addInst(new IRZext(curBlock, zext, new IRIntType(1), noZext, new IRIntType(8)));
+                curBlock.addInst(new IRStore(curBlock, res, zext));
+                curBlock.addInst(new IRJump(curBlock, "binary_op.end"));
+
+                curBlock = shortCircuitbranch;
+                curBlock.addInst(new IRStore(curBlock, res, new IRBoolConst(false)));
+                curBlock.addInst(new IRJump(curBlock, "binary_op.end"));
+                curBlock = endBinaryOp;
+
+                inFunc.blocks.add(prev);
+                inFunc.blocks.add(rightBranch);
+                inFunc.blocks.add(shortCircuitbranch);
+            }
+            else if (it.op.equals("||")) {
+                prev.addInst(new IRBranch(curBlock, getVal(it.lop, true), shortCircuitbranch, rightBranch));
+
+                curBlock = rightBranch;
+                it.rop.accept(this);
+                noZext = getVal(it.rop, true);
+                curBlock.addInst(new IRZext(curBlock, zext, new IRIntType(1), noZext, new IRIntType(8)));
+                curBlock.addInst(new IRStore(curBlock, res, zext));
+
+                curBlock = shortCircuitbranch;
+                curBlock.addInst(new IRStore(curBlock, res, new IRBoolConst(true)));
+                curBlock.addInst(new IRJump(curBlock, "binary_op.end"));
+                curBlock = endBinaryOp;
+
+                inFunc.blocks.add(prev);
+                inFunc.blocks.add(rightBranch);
+                inFunc.blocks.add(shortCircuitbranch);
+            }
+            it.addr = res;
         }//short-circuit value
-        it.addr = res;
     }
 
     @Override
     public void visit(TernaryExprNode it) {
+        it.condition.accept(this);
+        BasicBlock prev = curBlock;
+        BasicBlock trueBranch = new BasicBlock("ternary.then", inFunc);
+        BasicBlock falseBranch = new BasicBlock("ternary.else", inFunc);
+        BasicBlock endTernary = new BasicBlock("ternary.end", inFunc);
 
+        IRRegister res = new IRRegister("ternary", getIRType(it.type));
+
+        prev.addInst(new IRAlloca(prev, getIRType(it.type), res));
+        prev.addInst(new IRBranch(prev, getVal(it.condition, true), trueBranch, falseBranch));
+
+        curBlock = trueBranch;
+        it.trueVal.accept(this);
+        trueBranch.addInst(new IRStore(curBlock, res, getVal(it.trueVal, false)));
+        trueBranch.addInst(new IRJump(curBlock, endTernary.label));
+
+        curBlock = falseBranch;
+        it.falseVal.accept(this);
+        falseBranch.addInst(new IRStore(curBlock, res, getVal(it.falseVal, false)));
+        falseBranch.addInst(new IRJump(curBlock, endTernary.label));
+
+        it.addr = res;
+        inFunc.blocks.add(prev);
+        inFunc.blocks.add(trueBranch);
+        inFunc.blocks.add(falseBranch);
+        curBlock = endTernary;
     }
 
     @Override
@@ -229,7 +324,6 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(AtomExprNode it) {
-        System.out.println(it.content);
         if (it.isIdentifier) {
             it.addr = curScope.entityMap.get(it.content);
         }
@@ -272,9 +366,16 @@ public class IRBuilder implements ASTVisitor {
     public void visit(IfStmtNode it) {
         it.condition.accept(this);
         BasicBlock prev = curBlock;
-        BasicBlock trueBranch = new BasicBlock("if.then");
-        BasicBlock falseBranch = new BasicBlock("if.else");
-        BasicBlock endIf = new BasicBlock("if.end");
+        BasicBlock trueBranch = new BasicBlock("if.then", inFunc);
+        BasicBlock falseBranch = new BasicBlock("if.else", inFunc);
+        BasicBlock endIf = new BasicBlock("if.end", inFunc);
+
+        if (it.falseThenWork != null) {
+            prev.addInst(new IRBranch(prev, getVal(it.condition, true), trueBranch, falseBranch));
+        }
+        else {
+            prev.addInst(new IRBranch(prev, getVal(it.condition, true), trueBranch, endIf));
+        }
 
         curScope = new Scope(curScope);
         curBlock = trueBranch;
@@ -288,11 +389,10 @@ public class IRBuilder implements ASTVisitor {
             it.falseThenWork.accept(this);
             falseBranch.addInst(new IRJump(curBlock, endIf.label));
             curScope = curScope.parentScope;
-            prev.addInst(new IRBranch(prev, getVal(it.condition, true), trueBranch, falseBranch));
         }
-        else {
-            prev.addInst(new IRBranch(prev, getVal(it.condition, true), trueBranch, endIf));
-        }
+        inFunc.blocks.add(prev);
+        inFunc.blocks.add(trueBranch);
+        inFunc.blocks.add(falseBranch);
         curBlock = endIf;
     }
 
@@ -347,7 +447,13 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(ParamsListNode it) {
-
+        for (int i = 0; i < it.identifiers.size(); i++) {
+            IRRegister reg = new IRRegister(it.identifiers.get(i), getIRType(it.types.get(i)));//register allocated for parameters
+            inFunc.params.add(reg);
+            IRRegister addr = new IRRegister(reg.name + ".addr", new IRPtrType(reg.type));
+            curBlock.addInst(new IRAlloca(curBlock, new IRIntType(32), addr));
+            curBlock.addInst(new IRStore(curBlock, addr, reg));
+        }
     }
 
     @Override
@@ -362,7 +468,17 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(DefineFunctionNode it) {
-
+        Function func = new Function(it.funcName, getIRType(it.type));
+        inFunc = func;
+        curBlock = new BasicBlock("entry", inFunc);
+        curScope = new Scope(curScope);
+        if (it.paramsList != null) {
+            it.paramsList.accept(this);
+        }
+        for (var nxt: it.stmts) {
+            nxt.accept(this);
+        }
+        System.out.println(func.toString());
     }
 
     @Override
@@ -380,6 +496,6 @@ public class IRBuilder implements ASTVisitor {
         for (var nxt: it.Defs) {
             nxt.accept(this);
         }
-        System.out.println(curBlock.toString());
+        //System.out.println(curBlock.toString());
     }
 }

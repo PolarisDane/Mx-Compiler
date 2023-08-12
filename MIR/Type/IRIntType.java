@@ -1,10 +1,8 @@
 package MIR.Type;
 
 public class IRIntType extends IRBaseType {
-    public int bitWidth;
     public IRIntType(int bitWidth) {
-        super("i" + bitWidth, bitWidth / 8);
-        this.bitWidth = bitWidth;
+        super("i" + bitWidth, bitWidth);
     }
 
     @Override

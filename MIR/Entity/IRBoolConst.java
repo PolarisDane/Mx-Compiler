@@ -12,6 +12,6 @@ public class IRBoolConst extends Entity {
 
     @Override
     public String toString() {
-        return val ? "true" : "false";
+        return val ? "1" : "0";
     }
 }
