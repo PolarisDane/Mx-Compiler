@@ -18,4 +18,8 @@ public class IRRegister extends Entity {
     public String toString() {
         return "%" + name + "." + id;
     }
+
+    public String getRegName() {
+        return name + "." + id;
+    }
 }

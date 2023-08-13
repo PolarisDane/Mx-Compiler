@@ -319,7 +319,10 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(AssignExprNode it) {
-
+        it.assignTo.accept(this);
+        it.assignVal.accept(this);
+        IRRegister res = curScope.entityMap.get(it.assignTo.content);
+        curBlock.addInst(new IRStore(curBlock, res, getVal(it.assignVal, false)));
     }
 
     @Override
@@ -398,12 +401,67 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(ForStmtNode it) {
-
+        curScope = new Scope(curScope);
+        BasicBlock prev = curBlock;
+        BasicBlock forCond = new BasicBlock("for.cond", inFunc);
+        BasicBlock forInc = new BasicBlock("for.inc", inFunc);
+        BasicBlock forBody = new BasicBlock("for.body", inFunc);
+        BasicBlock forEnd = new BasicBlock("for.end", inFunc);
+        if (it.defInit != null) {
+            it.defInit.accept(this);
+        }
+        if (it.exprInit != null) {
+            it.exprInit.accept(this);
+        }
+        curBlock.addInst(new IRJump(curBlock, "for.cond"));
+        curBlock = forCond;
+        if (it.condition != null) {
+            it.condition.accept(this);
+            curBlock.addInst(new IRBranch(curBlock, getVal(it.condition, true), forBody, forEnd));
+        }
+        else {
+            curBlock.addInst(new IRJump(curBlock, "for.Body"));
+        }
+        curBlock = forInc;
+        if (it.step != null) {
+            it.step.accept(this);
+        }
+        curBlock.addInst(new IRJump(curBlock, "for.cond"));
+        curBlock = forBody;
+        if (it.work != null) {
+            if (it.work instanceof BlockNode) {
+                ((BlockNode) it.work).stmts.forEach(nxt->nxt.accept(this));
+            }
+            else {
+                it.work.accept(this);
+            }
+        }
+        curBlock.addInst(new IRJump(curBlock, "for.inc"));
+        curBlock = forEnd;
+        inFunc.blocks.add(prev);
+        inFunc.blocks.add(forCond);
+        inFunc.blocks.add(forInc);
+        inFunc.blocks.add(forBody);
+        curScope = curScope.parentScope;
     }
 
     @Override
     public void visit(WhileStmtNode it) {
-
+        curScope = new Scope(curScope);
+        BasicBlock prev = curBlock;
+        BasicBlock whileCond = new BasicBlock("while.cond", inFunc);
+        BasicBlock whileBody = new BasicBlock("while.body", inFunc);
+        BasicBlock whileEnd = new BasicBlock("while.end", inFunc);
+        curBlock = whileCond;
+        it.condition.accept(this);
+//        curBlock.addInst();
+        curBlock = whileBody;
+        it.work.accept(this);
+        curBlock.addInst(new IRJump(curBlock, "while.cond"));
+        inFunc.blocks.add(prev);
+        inFunc.blocks.add(whileCond);
+        inFunc.blocks.add(whileBody);
+        curScope = curScope.parentScope;
     }
 
     @Override
@@ -423,7 +481,12 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(ReturnStmtNode it) {
-
+        if (it.returnVal != null) {
+            it.returnVal.accept(this);
+            curBlock.addInst(new IRStore(curBlock, inFunc.retReg, getVal(it.returnVal, true)));
+        }
+        curBlock.addInst(new IRJump(curBlock, "return"));
+        curBlock.returned = true;
     }
 
     @Override
@@ -453,6 +516,7 @@ public class IRBuilder implements ASTVisitor {
             IRRegister addr = new IRRegister(reg.name + ".addr", new IRPtrType(reg.type));
             curBlock.addInst(new IRAlloca(curBlock, new IRIntType(32), addr));
             curBlock.addInst(new IRStore(curBlock, addr, reg));
+            curScope.entityMap.put(it.identifiers.get(i), addr);
         }
     }
 
@@ -475,15 +539,43 @@ public class IRBuilder implements ASTVisitor {
         if (it.paramsList != null) {
             it.paramsList.accept(this);
         }
+        if (!it.type.equals(builtin.VoidType)) {
+            inFunc.retReg = new IRRegister("retVal", new IRPtrType(getIRType(it.type)));
+        }
         for (var nxt: it.stmts) {
             nxt.accept(this);
         }
+        if (curBlock != null) {
+            if (!curBlock.returned) {
+                curBlock.addInst(new IRJump(curBlock, "return"));
+            }
+            inFunc.blocks.add(curBlock);
+        }
+        if (it.type.equals(builtin.VoidType)) {
+            curBlock = new BasicBlock("return", inFunc, false);
+            curBlock.addInst(new IRRet(curBlock, null));
+            inFunc.blocks.add(curBlock);
+        }
+        else {
+            curBlock = new BasicBlock("return", inFunc, false);
+            IRRegister res = new IRRegister("", getIRType(it.type));
+            curBlock.addInst(new IRLoad(curBlock, getIRType(it.type), res, inFunc.retReg));
+            curBlock.addInst(new IRRet(curBlock, res));
+            inFunc.blocks.add(curBlock);
+        }
+        curScope = curScope.parentScope;
+        inFunc = null;
+        curBlock = null;
         System.out.println(func.toString());
     }
 
     @Override
     public void visit(BlockNode it) {
-
+        curScope = new Scope(curScope);
+        for (var nxt: it.stmts) {
+            nxt.accept(this);
+        }
+        curScope = curScope.parentScope;
     }
 
     @Override

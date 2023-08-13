@@ -16,13 +16,13 @@ public class IRPtrType extends IRBaseType {
     }
 
     public IRPtrType(IRBaseType type, int dim) {
-        super(type.content + "*", 4);
+        super("ptr", 32);
         this.type = type;
         this.dim = dim;
     }
 
     @Override
     public String toString() {
-        return type.content + "*" + dim;
+        return content;
     }
 }

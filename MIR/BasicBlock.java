@@ -11,6 +11,8 @@ public class BasicBlock {
     public Function inFunc;
     public IRBaseInst terminal;
 
+    public boolean returned = false;
+
     public static int cnt = 0;
 
     public int id;
@@ -18,6 +20,11 @@ public class BasicBlock {
     public BasicBlock(String label, Function inFunc) {
         id = cnt++;
         this.label = label + id;
+        this.inFunc = inFunc;
+    }
+
+    public BasicBlock(String label, Function inFunc, boolean no_id) {
+        this.label = label;
         this.inFunc = inFunc;
     }
 
