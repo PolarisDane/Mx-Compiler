@@ -4,10 +4,10 @@ JAVA_SRC = $(shell find . -name '*.java')
 ANTLR_JAR = /usr/share/java/antlr-4.13.0-complete.jar
 
 .PHONY: all
-all: main
+all: Compiler
 
-.PHONY: main
-main: $(JAVA_SRC)
+.PHONY: Compiler
+Compiler: $(JAVA_SRC)
 	javac -d bin $(JAVA_SRC) -cp $(ANTLR_JAR) -encoding UTF-8
 
 .PHONY: clean
