@@ -33,8 +33,8 @@ public class main {
             ASTRoot = (RootNode) astBuilder.visit(parserTreeRoot);
             new SymbolCollector(gScope).visit(ASTRoot);
             new SemanticChecker(gScope).visit(ASTRoot);
-            System.out.println("IR start-----------");
-            new IRBuilder(gScope).visit(ASTRoot);
+//            System.out.println("IR start-----------");
+//            new IRBuilder(gScope).visit(ASTRoot);
         } catch (error err) {
             System.err.println(err.toString());
             throw new RuntimeException();
