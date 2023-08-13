@@ -532,10 +532,10 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(RootNode it) {
-//        DefineFunctionNode mainFunc = gScope.getFunc("main", new position(1, 0));
-//        if (mainFunc.paramsList != null || !mainFunc.type.equals(builtin.IntType)) {
-//            throw new semanticError("Main function defined incorrectly", mainFunc.pos);
-//        }
+        DefineFunctionNode mainFunc = gScope.getFunc("main", new position(1, 0));
+        if (mainFunc.paramsList != null || !mainFunc.type.equals(builtin.IntType)) {
+            throw new semanticError("Main function defined incorrectly", mainFunc.pos);
+        }
         for (var nxt: it.Defs) {
             nxt.accept(this);
         }
