@@ -14,6 +14,8 @@ public class IRBuilder implements ASTVisitor {
     public BasicBlock curBlock = null;
 
     public Function inFunc = null;
+    public BasicBlock breakNxt = null;
+    public BasicBlock continueNxt = null;
 
     public IRBuilder(GlobalScope gScope) {
         this.gScope = gScope;
@@ -254,16 +256,15 @@ public class IRBuilder implements ASTVisitor {
                 noZext = getVal(it.rop, true);
                 curBlock.addInst(new IRZext(curBlock, zext, new IRIntType(1), noZext, new IRIntType(8)));
                 curBlock.addInst(new IRStore(curBlock, res, zext));
-                curBlock.addInst(new IRJump(curBlock, "binary_op.end"));
+                curBlock.addInst(new IRJump(curBlock, endBinaryOp.label));
+                inFunc.blocks.add(rightBranch);
 
                 curBlock = shortCircuitbranch;
                 curBlock.addInst(new IRStore(curBlock, res, new IRBoolConst(false)));
-                curBlock.addInst(new IRJump(curBlock, "binary_op.end"));
-                curBlock = endBinaryOp;
-
-                inFunc.blocks.add(prev);
-                inFunc.blocks.add(rightBranch);
+                curBlock.addInst(new IRJump(curBlock, endBinaryOp.label));
                 inFunc.blocks.add(shortCircuitbranch);
+                inFunc.blocks.add(endBinaryOp);
+                curBlock = endBinaryOp;
             }
             else if (it.op.equals("||")) {
                 prev.addInst(new IRBranch(curBlock, getVal(it.lop, true), shortCircuitbranch, rightBranch));
@@ -273,15 +274,14 @@ public class IRBuilder implements ASTVisitor {
                 noZext = getVal(it.rop, true);
                 curBlock.addInst(new IRZext(curBlock, zext, new IRIntType(1), noZext, new IRIntType(8)));
                 curBlock.addInst(new IRStore(curBlock, res, zext));
+                inFunc.blocks.add(rightBranch);
 
                 curBlock = shortCircuitbranch;
                 curBlock.addInst(new IRStore(curBlock, res, new IRBoolConst(true)));
-                curBlock.addInst(new IRJump(curBlock, "binary_op.end"));
-                curBlock = endBinaryOp;
-
-                inFunc.blocks.add(prev);
-                inFunc.blocks.add(rightBranch);
+                curBlock.addInst(new IRJump(curBlock, endBinaryOp.label));
                 inFunc.blocks.add(shortCircuitbranch);
+                inFunc.blocks.add(endBinaryOp);
+                curBlock = endBinaryOp;
             }
             it.addr = res;
         }//short-circuit value
@@ -299,21 +299,22 @@ public class IRBuilder implements ASTVisitor {
 
         prev.addInst(new IRAlloca(prev, getIRType(it.type), res));
         prev.addInst(new IRBranch(prev, getVal(it.condition, true), trueBranch, falseBranch));
+        inFunc.blocks.add(prev);
 
         curBlock = trueBranch;
         it.trueVal.accept(this);
         trueBranch.addInst(new IRStore(curBlock, res, getVal(it.trueVal, false)));
         trueBranch.addInst(new IRJump(curBlock, endTernary.label));
+        inFunc.blocks.add(trueBranch);
 
         curBlock = falseBranch;
         it.falseVal.accept(this);
         falseBranch.addInst(new IRStore(curBlock, res, getVal(it.falseVal, false)));
         falseBranch.addInst(new IRJump(curBlock, endTernary.label));
+        inFunc.blocks.add(falseBranch);
 
         it.addr = res;
-        inFunc.blocks.add(prev);
-        inFunc.blocks.add(trueBranch);
-        inFunc.blocks.add(falseBranch);
+        inFunc.blocks.add(endTernary);
         curBlock = endTernary;
     }
 
@@ -321,14 +322,14 @@ public class IRBuilder implements ASTVisitor {
     public void visit(AssignExprNode it) {
         it.assignTo.accept(this);
         it.assignVal.accept(this);
-        IRRegister res = curScope.entityMap.get(it.assignTo.content);
+        IRRegister res = it.assignTo.addr;
         curBlock.addInst(new IRStore(curBlock, res, getVal(it.assignVal, false)));
     }
 
     @Override
     public void visit(AtomExprNode it) {
         if (it.isIdentifier) {
-            it.addr = curScope.entityMap.get(it.content);
+            it.addr = curScope.getReg(it.content, true);
         }
         else {
             if (it.type.equals(builtin.IntType)) {
@@ -379,11 +380,11 @@ public class IRBuilder implements ASTVisitor {
         else {
             prev.addInst(new IRBranch(prev, getVal(it.condition, true), trueBranch, endIf));
         }
-
         curScope = new Scope(curScope);
         curBlock = trueBranch;
         it.trueThenWork.accept(this);
         trueBranch.addInst(new IRJump(curBlock, endIf.label));
+        inFunc.blocks.add(trueBranch);
         curScope = curScope.parentScope;
 
         if (it.falseThenWork != null) {
@@ -393,9 +394,10 @@ public class IRBuilder implements ASTVisitor {
             falseBranch.addInst(new IRJump(curBlock, endIf.label));
             curScope = curScope.parentScope;
         }
-        inFunc.blocks.add(prev);
-        inFunc.blocks.add(trueBranch);
-        inFunc.blocks.add(falseBranch);
+        if (it.falseThenWork != null) {
+            inFunc.blocks.add(falseBranch);
+        }
+        inFunc.blocks.add(endIf);
         curBlock = endIf;
     }
 
@@ -407,26 +409,30 @@ public class IRBuilder implements ASTVisitor {
         BasicBlock forInc = new BasicBlock("for.inc", inFunc);
         BasicBlock forBody = new BasicBlock("for.body", inFunc);
         BasicBlock forEnd = new BasicBlock("for.end", inFunc);
+        breakNxt = forEnd;
+        continueNxt = forInc;
         if (it.defInit != null) {
             it.defInit.accept(this);
         }
         if (it.exprInit != null) {
             it.exprInit.accept(this);
         }
-        curBlock.addInst(new IRJump(curBlock, "for.cond"));
+        prev.addInst(new IRJump(curBlock, forCond.label));
         curBlock = forCond;
         if (it.condition != null) {
             it.condition.accept(this);
             curBlock.addInst(new IRBranch(curBlock, getVal(it.condition, true), forBody, forEnd));
         }
         else {
-            curBlock.addInst(new IRJump(curBlock, "for.Body"));
+            curBlock.addInst(new IRJump(curBlock, forBody.label));
         }
+        inFunc.blocks.add(forCond);
         curBlock = forInc;
         if (it.step != null) {
             it.step.accept(this);
         }
-        curBlock.addInst(new IRJump(curBlock, "for.cond"));
+        curBlock.addInst(new IRJump(curBlock, forCond.label));
+        inFunc.blocks.add(forInc);
         curBlock = forBody;
         if (it.work != null) {
             if (it.work instanceof BlockNode) {
@@ -436,12 +442,10 @@ public class IRBuilder implements ASTVisitor {
                 it.work.accept(this);
             }
         }
-        curBlock.addInst(new IRJump(curBlock, "for.inc"));
-        curBlock = forEnd;
-        inFunc.blocks.add(prev);
-        inFunc.blocks.add(forCond);
-        inFunc.blocks.add(forInc);
+        curBlock.addInst(new IRJump(curBlock, forInc.label));
         inFunc.blocks.add(forBody);
+        curBlock = forEnd;
+        inFunc.blocks.add(forEnd);
         curScope = curScope.parentScope;
     }
 
@@ -452,15 +456,18 @@ public class IRBuilder implements ASTVisitor {
         BasicBlock whileCond = new BasicBlock("while.cond", inFunc);
         BasicBlock whileBody = new BasicBlock("while.body", inFunc);
         BasicBlock whileEnd = new BasicBlock("while.end", inFunc);
+        breakNxt = whileEnd;
+        continueNxt = whileCond;
         curBlock = whileCond;
         it.condition.accept(this);
-//        curBlock.addInst();
+        curBlock.addInst(new IRBranch(curBlock, getVal(it.condition, true), whileBody, whileEnd));
+        inFunc.blocks.add(whileCond);
         curBlock = whileBody;
         it.work.accept(this);
-        curBlock.addInst(new IRJump(curBlock, "while.cond"));
-        inFunc.blocks.add(prev);
-        inFunc.blocks.add(whileCond);
+        curBlock.addInst(new IRJump(curBlock, whileCond.label));
         inFunc.blocks.add(whileBody);
+        curBlock = whileEnd;
+        inFunc.blocks.add(whileEnd);
         curScope = curScope.parentScope;
     }
 
@@ -471,12 +478,12 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(BreakStmtNode it) {
-
+        curBlock.addInst(new IRJump(curBlock, breakNxt.label));
     }
 
     @Override
     public void visit(ContinueStmtNode it) {
-
+        curBlock.addInst(new IRJump(curBlock, continueNxt.label));
     }
 
     @Override
@@ -549,7 +556,6 @@ public class IRBuilder implements ASTVisitor {
             if (!curBlock.returned) {
                 curBlock.addInst(new IRJump(curBlock, "return"));
             }
-            inFunc.blocks.add(curBlock);
         }
         if (it.type.equals(builtin.VoidType)) {
             curBlock = new BasicBlock("return", inFunc, false);

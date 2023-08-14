@@ -9,7 +9,7 @@ public class BasicBlock {
     public String label;
     public LinkedList<IRBaseInst> insts = new LinkedList<>();
     public Function inFunc;
-    public IRBaseInst terminal;
+    public boolean terminal = false;
 
     public boolean returned = false;
 
@@ -29,12 +29,16 @@ public class BasicBlock {
     }
 
     public void addInst(IRBaseInst inst) {
+        if (terminal) {
+            return;
+        }
         if (inst instanceof IRAlloca) {
             inFunc.allocaInst.add((IRAlloca) inst);
         }
-        else {
-            insts.add(inst);
+        if (inst instanceof IRBranch || inst instanceof  IRJump) {
+            terminal = true;
         }
+        insts.add(inst);
     }
 
     public String toString() {

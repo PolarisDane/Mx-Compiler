@@ -15,14 +15,14 @@ import java.io.InputStream;
 
 public class main {
     public static void main(String[] args) throws Exception {
-//        String name = "test.txt";
-//        InputStream input = new FileInputStream(name);
-        CharStream input = CharStreams.fromStream(System.in);
+        String name = "test.txt";
+        InputStream input = new FileInputStream(name);
+//        CharStream input = CharStreams.fromStream(System.in);
         try {
             RootNode ASTRoot;
             GlobalScope gScope = new GlobalScope();
-//            MxLexer lexer = new MxLexer(CharStreams.fromStream(input));
-            MxLexer lexer = new MxLexer(input);
+            MxLexer lexer = new MxLexer(CharStreams.fromStream(input));
+//            MxLexer lexer = new MxLexer(input);
             lexer.removeErrorListeners();
             lexer.addErrorListener(new MxErrorListener());
             MxParser parser = new MxParser(new CommonTokenStream(lexer));
@@ -33,8 +33,8 @@ public class main {
             ASTRoot = (RootNode) astBuilder.visit(parserTreeRoot);
             new SymbolCollector(gScope).visit(ASTRoot);
             new SemanticChecker(gScope).visit(ASTRoot);
-//            System.out.println("IR start-----------");
-//            new IRBuilder(gScope).visit(ASTRoot);
+            System.out.println("IR start-----------");
+            new IRBuilder(gScope).visit(ASTRoot);
         } catch (error err) {
             System.err.println(err.toString());
             throw new RuntimeException();

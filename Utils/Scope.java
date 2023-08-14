@@ -3,6 +3,7 @@ package Utils;
 import java.util.HashMap;
 import AST.*;
 import MIR.Entity.IRRegister;
+import MIR.Type.IRBaseType;
 import Utils.error.semanticError;
 
 public class Scope {
@@ -25,6 +26,16 @@ public class Scope {
         this.inConstructor = parentScope.inConstructor;
         this.inLoop = parentScope.inLoop;
         this.returnScope = parentScope.returnScope;
+    }
+
+    public IRRegister getReg(String name, boolean lookUpon) {
+        if (entityMap.containsKey(name)) {
+            return entityMap.get(name);
+        }
+        if (parentScope != null && lookUpon) {
+            return parentScope.getReg(name, lookUpon);
+        }
+        return null;
     }
 
     public void defineVariable(String name, Type type, position pos) {
