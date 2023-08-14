@@ -22,8 +22,8 @@ public class Function {
     }
 
     public String toString() {
-        String ret;
-        ret = "define dso_local " + type.toString() + "@" + funcName + "(";
+        String ret = "";
+        ret = "define dso_local " + type.toString() + " @" + funcName + "(";
         for (int i = 0; i < params.size(); i++) {
             ret += params.get(i).type.toString() + " " + params.get(i).toString();
             if (i != params.size() - 1) {

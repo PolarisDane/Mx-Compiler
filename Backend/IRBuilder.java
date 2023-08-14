@@ -16,6 +16,7 @@ public class IRBuilder implements ASTVisitor {
     public Function inFunc = null;
     public BasicBlock breakNxt = null;
     public BasicBlock continueNxt = null;
+    public Program program;
 
     public IRBuilder(GlobalScope gScope) {
         this.gScope = gScope;
@@ -63,6 +64,18 @@ public class IRBuilder implements ASTVisitor {
             IRType = new IRPtrType(IRType, type.dim);
         }
         return IRType;
+    }
+
+    public void declareGlobalVar(DefineVarStmtNode it) {
+        for (var nxt: it.assigns) {
+            IRGlobalVar gVar = new IRGlobalVar(nxt.assignTo, getIRType(it.type), nxt.assignVal.entity);
+            program.globalVar.add(gVar);
+            gScope.entityMap.put(nxt.assignTo, gVar);
+        }
+    }
+
+    public void initGlobalVar(DefineVarStmtNode it) {
+
     }
 
     @Override
@@ -231,16 +244,16 @@ public class IRBuilder implements ASTVisitor {
             if (flag) {
                 IRRegister res = new IRRegister("binary_op", new IRIntType(32));
                 curBlock.addInst(new IRBinaryOp(curBlock, res, new IRIntType(32), op, getVal(it.lop, false), getVal(it.rop, false)));
-                it.addr = res;
+                it.entity = res;
             }
             else {
                 IRRegister res = new IRRegister("binary_op", new IRIntType(1));
-                curBlock.addInst(new IRIcmp(curBlock, res, op, new IRIntType(1), getVal(it.lop, false), getVal(it.rop, false)));
-                it.addr = res;
+                curBlock.addInst(new IRIcmp(curBlock, res, op, new IRIntType(32), getVal(it.lop, false), getVal(it.rop, false)));
+                it.entity = res;
             }
         }//non short-circuit value
         else {
-            IRRegister res = new IRRegister("binary_op", new IRIntType(32));
+            IRRegister res = new IRRegister("binary_op", new IRIntType(8));
             Entity noZext;
             IRRegister zext = new IRRegister("zero_extended", new IRIntType(8));
             curBlock.addInst(new IRAlloca(curBlock, new IRIntType(8), res));
@@ -273,11 +286,11 @@ public class IRBuilder implements ASTVisitor {
                 it.rop.accept(this);
                 noZext = getVal(it.rop, true);
                 curBlock.addInst(new IRZext(curBlock, zext, new IRIntType(1), noZext, new IRIntType(8)));
-                curBlock.addInst(new IRStore(curBlock, res, zext));
+//                curBlock.addInst(new IRStore(curBlock, res, zext));
                 inFunc.blocks.add(rightBranch);
 
                 curBlock = shortCircuitbranch;
-                curBlock.addInst(new IRStore(curBlock, res, new IRBoolConst(true)));
+//                curBlock.addInst(new IRStore(curBlock, res, new IRBoolConst(true)));
                 curBlock.addInst(new IRJump(curBlock, endBinaryOp.label));
                 inFunc.blocks.add(shortCircuitbranch);
                 inFunc.blocks.add(endBinaryOp);
@@ -299,7 +312,6 @@ public class IRBuilder implements ASTVisitor {
 
         prev.addInst(new IRAlloca(prev, getIRType(it.type), res));
         prev.addInst(new IRBranch(prev, getVal(it.condition, true), trueBranch, falseBranch));
-        inFunc.blocks.add(prev);
 
         curBlock = trueBranch;
         it.trueVal.accept(this);
@@ -542,12 +554,14 @@ public class IRBuilder implements ASTVisitor {
         Function func = new Function(it.funcName, getIRType(it.type));
         inFunc = func;
         curBlock = new BasicBlock("entry", inFunc);
+        inFunc.blocks.add(curBlock);
         curScope = new Scope(curScope);
         if (it.paramsList != null) {
             it.paramsList.accept(this);
         }
         if (!it.type.equals(builtin.VoidType)) {
             inFunc.retReg = new IRRegister("retVal", new IRPtrType(getIRType(it.type)));
+            curBlock.addInst(new IRAlloca(curBlock, getIRType(it.type), inFunc.retReg));
         }
         for (var nxt: it.stmts) {
             nxt.accept(this);
@@ -570,9 +584,9 @@ public class IRBuilder implements ASTVisitor {
             inFunc.blocks.add(curBlock);
         }
         curScope = curScope.parentScope;
+        program.functions.add(inFunc);
         inFunc = null;
         curBlock = null;
-        System.out.println(func.toString());
     }
 
     @Override
@@ -591,9 +605,15 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(RootNode it) {
+        Function initGlobalVar = new Function("__mx_global_var_init", new IRVoidType());
         for (var nxt: it.Defs) {
-            nxt.accept(this);
+            if (nxt instanceof DefineVarStmtNode) {
+
+            }
+            else {
+                nxt.accept(this);
+            }
         }
-        //System.out.println(curBlock.toString());
+        System.out.println(program.toString());
     }
 }

@@ -12,7 +12,7 @@ public class IRJump extends IRBaseInst {
 
     @Override
     public String toString() {
-        return "jump " + label;
+        return "br label %" + label;
     }
 }
 //done

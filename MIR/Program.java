@@ -13,6 +13,19 @@ public class Program {
     public Program() {}
 
     public String toString() {
-        return "";
+        String ret = "";
+        for (var nxt: globalVar) {
+            ret += nxt.toString() + " = global " + nxt.type.toString() + " " + nxt.initVal.toString() + "\n";
+        }
+        ret += "\n";
+        for (var nxt: classes) {
+            ret += nxt.toString() + "\n";
+        }
+        ret += "\n";
+        for (var nxt: functions) {
+            ret += nxt.toString() + "\n\n";
+        }
+        ret += "\n";
+        return ret;
     }
 }

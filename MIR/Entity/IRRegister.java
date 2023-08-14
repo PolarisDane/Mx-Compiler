@@ -11,15 +11,10 @@ public class IRRegister extends Entity {
         super(type);
         this.name = name;
         this.id = cnt++;
-//        System.out.println(cnt);
     }
 
     @Override
     public String toString() {
         return "%" + name + "." + id;
-    }
-
-    public String getRegName() {
-        return name + "." + id;
     }
 }

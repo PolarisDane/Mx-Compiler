@@ -34,6 +34,7 @@ public class BasicBlock {
         }
         if (inst instanceof IRAlloca) {
             inFunc.allocaInst.add((IRAlloca) inst);
+            return;
         }
         if (inst instanceof IRBranch || inst instanceof  IRJump) {
             terminal = true;

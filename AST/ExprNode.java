@@ -13,7 +13,6 @@ public abstract class ExprNode extends ASTNode {
     public IRRegister addr;
 
     public Type type = new Type();
-    // public entity val;
 
     public ExprNode(position pos) {
         super(pos);
