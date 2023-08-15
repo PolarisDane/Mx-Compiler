@@ -10,5 +10,15 @@ public abstract class IRBaseType {
 
     public abstract String toString();
 
-//    public abstract boolean equals(Object obj);
+
+
+    public boolean equals(Object obj) {
+        if (!content.equals(((IRBaseType) obj).content)) {
+            return false;
+        }
+        if (size != ((IRBaseType) obj).size) {
+            return false;
+        }
+        return true;
+    }
 }

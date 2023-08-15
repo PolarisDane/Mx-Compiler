@@ -4,13 +4,12 @@ import MIR.Type.IRBaseType;
 
 public class IRGlobalVar extends IRRegister {
     public Entity initVal;
-    public IRGlobalVar(String content, IRBaseType type, Entity initVal) {
+    public IRGlobalVar(String content, IRBaseType type) {
         super(content, type);
-        this.initVal = initVal;
     }
 
     @Override
     public String toString() {
-        return "@" + content;
+        return "@" + name;
     }
 }

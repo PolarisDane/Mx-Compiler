@@ -12,7 +12,7 @@ public class IRCall extends IRBaseInst {
     public IRRegister res;
     public IRBaseType type;
     public String funcName;
-    public ArrayList<Entity> args;
+    public ArrayList<Entity> args = new ArrayList<>();
 
     public IRCall(BasicBlock parentBlock, IRRegister res, IRBaseType type, String funcName) {
         super(parentBlock);
@@ -24,7 +24,7 @@ public class IRCall extends IRBaseInst {
     @Override
     public String toString() {
         String ret;
-        ret = "call void @" + funcName + "(";
+        ret = res.toString() + " = call " + type.toString() + " @" + funcName + "(";
         for (int i = 0; i < args.size(); i++) {
             ret += args.get(i).type.toString() + " " + args.get(i).toString();
             if (i != args.size() - 1) {

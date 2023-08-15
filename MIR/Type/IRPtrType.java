@@ -4,7 +4,7 @@ public class IRPtrType extends IRBaseType {
     public IRBaseType type;
     public int dim = 1;
     public IRPtrType(IRBaseType type) {
-        super(type.content + "*", 4);
+        super("ptr", 32);
         this.type = type;
         if (type instanceof IRPtrType) {
             this.type = ((IRPtrType) type).type;
@@ -23,6 +23,6 @@ public class IRPtrType extends IRBaseType {
 
     @Override
     public String toString() {
-        return content;
+        return type.toString();
     }
 }

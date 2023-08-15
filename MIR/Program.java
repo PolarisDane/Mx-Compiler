@@ -15,7 +15,7 @@ public class Program {
     public String toString() {
         String ret = "";
         for (var nxt: globalVar) {
-            ret += nxt.toString() + " = global " + nxt.type.toString() + " " + nxt.initVal.toString() + "\n";
+            ret += nxt.name + " = global " + nxt.type.toString() + " " + nxt.initVal.toString() + "\n";
         }
         ret += "\n";
         for (var nxt: classes) {

@@ -2,12 +2,15 @@ package Utils;
 
 import java.util.HashMap;
 import AST.*;
+import MIR.Entity.IRGlobalVar;
+import MIR.Function;
 import Utils.Builtin;
 import Utils.error.semanticError;
 
 public class GlobalScope extends Scope  {
     public HashMap<String, DefineFunctionNode> funcMap = new HashMap<>();
     public HashMap<String, DefineClassNode> classMap = new HashMap<>();
+    public HashMap<String, Function> IRfuncMap = new HashMap<>();
 
     public GlobalScope() {
         super();
