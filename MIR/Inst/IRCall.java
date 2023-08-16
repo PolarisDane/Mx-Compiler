@@ -24,7 +24,12 @@ public class IRCall extends IRBaseInst {
     @Override
     public String toString() {
         String ret;
-        ret = res.toString() + " = call " + type.toString() + " @" + funcName + "(";
+        if (type.content.equals("void")) {
+            ret = "call " + type.toString() + " @" + funcName + "(";
+        }
+        else {
+            ret = res.toString() + " = call " + type.toString() + " @" + funcName + "(";
+        }
         for (int i = 0; i < args.size(); i++) {
             ret += args.get(i).type.toString() + " " + args.get(i).toString();
             if (i != args.size() - 1) {

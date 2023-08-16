@@ -98,7 +98,7 @@ public class SemanticChecker implements ASTVisitor {
     public void visit(MemberExprNode it) {
         it.obj.accept(this);
         DefineClassNode classNode;
-        System.out.println("MemberExpr visited");
+//        System.out.println("MemberExpr visited");
         if (it.obj instanceof AtomExprNode && it.obj.content.equals("this")) {
             classNode = curScope.inClass;
         }
@@ -272,7 +272,6 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(AtomExprNode it) {
-//        System.out.println(it.content);
         if (it.content.equals("this") && curScope.inClass == null) {
             throw new semanticError("This used outside any class", it.pos);
         }
@@ -344,6 +343,9 @@ public class SemanticChecker implements ASTVisitor {
             if (!it.condition.type.equals(builtin.BoolType)) {
                 throw new semanticError("Statement condition is not type bool", it.pos);
             }
+        }
+        if (it.step != null) {
+            it.step.accept(this);
         }
         if (it.work != null) {
             if (it.work instanceof BlockNode) {
@@ -532,10 +534,10 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(RootNode it) {
-//        DefineFunctionNode mainFunc = gScope.getFunc("main", new position(1, 0));
-//        if (mainFunc.paramsList != null || !mainFunc.type.equals(builtin.IntType)) {
-//            throw new semanticError("Main function defined incorrectly", mainFunc.pos);
-//        }
+        DefineFunctionNode mainFunc = gScope.getFunc("main", new position(1, 0));
+        if (mainFunc.paramsList != null || !mainFunc.type.equals(builtin.IntType)) {
+            throw new semanticError("Main function defined incorrectly", mainFunc.pos);
+        }
         for (var nxt: it.Defs) {
             nxt.accept(this);
         }

@@ -21,6 +21,33 @@ public class IRBuilder implements ASTVisitor {
     public IRBuilder(GlobalScope gScope) {
         this.gScope = gScope;
         this.curScope = gScope;
+        IRBaseType CharStar = new IRPtrType(new IRIntType(8), 0);
+        IRBaseType Int = new IRIntType(32);
+        program.IRBuiltinFunc.add(new IRFuncDeclare("print", new IRVoidType(), CharStar));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("println", new IRVoidType(), CharStar));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("printInt", new IRVoidType(), Int));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("printlnInt", new IRVoidType(), Int));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("getString", CharStar));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("getInt", Int));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("toString", Int, CharStar));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("__gen_substring", CharStar, CharStar));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("__gen_parseInt", Int, CharStar));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("__gen_ord", Int, CharStar));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("__gen_stradd", CharStar, CharStar, CharStar));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("__gen_strlt", CharStar, CharStar, CharStar));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("__gen_strle", CharStar, CharStar, CharStar));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("__gen_strgt", CharStar, CharStar, CharStar));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("__gen_strge", CharStar, CharStar, CharStar));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("__gen_streq", CharStar, CharStar, CharStar));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("__gen_strneq", CharStar, CharStar, CharStar));
+    }
+
+    public String handleString(String str) {
+        String newStr = str.substring(1, str.length() - 1);
+        newStr.replace("\n", "\\OA");
+        newStr.replace("\\", "\\\\");
+        newStr.replace("\"","\\22");
+        return newStr;
     }
 
     public Entity getVal(ExprNode expr, boolean is_i1) {
@@ -32,8 +59,8 @@ public class IRBuilder implements ASTVisitor {
             }//is stored as 8-bit and used as 1-bit
             return expr.entity;
         }//const value already given
-        IRRegister loadVal = new IRRegister("", expr.addr.type);
-        curBlock.addInst(new IRLoad(curBlock, expr.addr.type, loadVal, expr.addr));
+        IRRegister loadVal = new IRRegister("", getIRType(expr.type));
+        curBlock.addInst(new IRLoad(curBlock, getIRType(expr.type), loadVal, expr.addr));
         expr.entity = loadVal;//for later use
         if (is_i1 && loadVal.type.size == 8) {
             curBlock.addInst(new IRTrunc(curBlock, res, loadVal.type, loadVal, new IRIntType(1)));
@@ -91,7 +118,7 @@ public class IRBuilder implements ASTVisitor {
 
     public void declareGlobalVar(DefineVarStmtNode it) {
         for (var nxt: it.assigns) {
-            IRGlobalVar gVar = new IRGlobalVar(nxt.assignTo, new IRPtrType(getIRType(it.type)));
+            IRGlobalVar gVar = new IRGlobalVar(nxt.assignTo, getIRType(it.type));
             program.globalVar.add(gVar);
             gScope.entityMap.put(nxt.assignTo, gVar);
         }
@@ -170,7 +197,13 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(ArrayExprNode it) {
-
+        it.array.accept(this);
+        it.index.accept(this);
+        IRRegister res = new IRRegister("array_ptr", getVal(it.array, false).type);
+        IRGetElementPtr inst = new IRGetElementPtr(curBlock, res, getIRType(it.type));
+        inst.idx.add(getVal(it.index, false));
+        curBlock.addInst(inst);
+        it.addr = res;
     }
 
     @Override
@@ -234,6 +267,74 @@ public class IRBuilder implements ASTVisitor {
         if (!it.op.equals("&&") && !it.op.equals("||")) {
             String op = null;
             it.rop.accept(this);
+            if (it.lop.type.equals(builtin.StringType) || it.rop.type.equals(builtin.StringType)) {
+                IRRegister res = null;
+                IRCall callInst;
+                switch(it.op) {
+                    case "+":
+                        it.entity = new IRRegister("binary_op", new IRPtrType(new IRIntType(8), 0));
+                        callInst = new IRCall(curBlock, (IRRegister) it.entity, it.entity.type, "__gen_stradd");
+                        callInst.args.add(getVal(it.lop, false));
+                        callInst.args.add(getVal(it.rop, false));
+                        curBlock.addInst(callInst);
+                        break;
+                    case "==":
+                        res = new IRRegister("call_builtin", new IRIntType(8));
+                        it.entity = new IRRegister("binary_op", new IRIntType(1));
+                        callInst = new IRCall(curBlock, res, res.type, "__gen_streq");
+                        callInst.args.add(getVal(it.lop, false));
+                        callInst.args.add(getVal(it.rop, false));
+                        curBlock.addInst(callInst);
+                        curBlock.addInst(new IRTrunc(curBlock, (IRRegister) it.entity, new IRIntType(8), res, new IRIntType(1)));
+                        break;
+                    case "!=":
+                        res = new IRRegister("call_builtin", new IRIntType(8));
+                        it.entity = new IRRegister("binary_op", new IRIntType(1));
+                        callInst = new IRCall(curBlock, res, res.type, "__gen_strneq");
+                        callInst.args.add(getVal(it.lop, false));
+                        callInst.args.add(getVal(it.rop, false));
+                        curBlock.addInst(callInst);
+                        curBlock.addInst(new IRTrunc(curBlock, (IRRegister) it.entity, new IRIntType(8), res, new IRIntType(1)));
+                        break;
+                    case "<":
+                        res = new IRRegister("call_builtin", new IRIntType(8));
+                        it.entity = new IRRegister("binary_op", new IRIntType(1));
+                        callInst = new IRCall(curBlock, res, res.type, "__gen_strlt");
+                        callInst.args.add(getVal(it.lop, false));
+                        callInst.args.add(getVal(it.rop, false));
+                        curBlock.addInst(callInst);
+                        curBlock.addInst(new IRTrunc(curBlock, (IRRegister) it.entity, new IRIntType(8), res, new IRIntType(1)));
+                        break;
+                    case ">":
+                        res = new IRRegister("call_builtin", new IRIntType(8));
+                        it.entity = new IRRegister("binary_op", new IRIntType(1));
+                        callInst = new IRCall(curBlock, res, res.type, "__gen_strgt");
+                        callInst.args.add(getVal(it.lop, false));
+                        callInst.args.add(getVal(it.rop, false));
+                        curBlock.addInst(callInst);
+                        curBlock.addInst(new IRTrunc(curBlock, (IRRegister) it.entity, new IRIntType(8), res, new IRIntType(1)));
+                        break;
+                    case "<=":
+                        res = new IRRegister("call_builtin", new IRIntType(8));
+                        it.entity = new IRRegister("binary_op", new IRIntType(1));
+                        callInst = new IRCall(curBlock, res, res.type, "__gen_strle");
+                        callInst.args.add(getVal(it.lop, false));
+                        callInst.args.add(getVal(it.rop, false));
+                        curBlock.addInst(callInst);
+                        curBlock.addInst(new IRTrunc(curBlock, (IRRegister) it.entity, new IRIntType(8), res, new IRIntType(1)));
+                        break;
+                    case ">=":
+                        res = new IRRegister("call_builtin", new IRIntType(8));
+                        it.entity = new IRRegister("binary_op", new IRIntType(1));
+                        callInst = new IRCall(curBlock, res, res.type, "__gen_strge");
+                        callInst.args.add(getVal(it.lop, false));
+                        callInst.args.add(getVal(it.rop, false));
+                        curBlock.addInst(callInst);
+                        curBlock.addInst(new IRTrunc(curBlock, (IRRegister) it.entity, new IRIntType(8), res, new IRIntType(1)));
+                        break;
+                }
+                return;
+            }
             boolean flag = false;
             switch(it.op) {
                 case "+":
@@ -403,7 +504,11 @@ public class IRBuilder implements ASTVisitor {
                 it.entity = new IRNullConst();
             }
             else if (it.type.equals(builtin.StringType)) {
-                it.entity = new IRStringConst(it.content);
+                String str = handleString(it.content);
+                if (!program.IRstringMap.containsKey(str)) {
+                    program.IRstringMap.put(str, new IRStringConst(str));
+                }
+                it.entity = program.IRstringMap.get(str);
             }
             else if (it.content.equals("this")) {
 
@@ -668,7 +773,9 @@ public class IRBuilder implements ASTVisitor {
                     initGlobalVar((DefineVarStmtNode) nxt);
                 }
             }
-            program.functions.add(inFunc);
+            if (!inFunc.blocks.get(0).insts.isEmpty()) {
+                program.functions.add(inFunc);
+            }
             inFunc = null;
             curBlock = null;
         }

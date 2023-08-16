@@ -23,6 +23,6 @@ public class IRPtrType extends IRBaseType {
 
     @Override
     public String toString() {
-        return type.toString();
+        return "ptr";
     }
 }
