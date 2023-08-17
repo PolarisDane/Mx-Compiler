@@ -84,3 +84,9 @@ char __gen_strneq(char* s, char* t) {
     return strcmp(s, t) != 0;
 }
 
+char* __malloc(int size) {
+    return malloc(size);
+}
+
+
+

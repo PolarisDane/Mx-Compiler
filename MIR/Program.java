@@ -11,6 +11,7 @@ public class Program {
     public ArrayList<IRGlobalVar> globalVar = new ArrayList<>();
     public ArrayList<Function> functions = new ArrayList<>();
     public ArrayList<IRStructType> classes = new ArrayList<>();
+    public HashMap<String, IRStructType> IRclassMap = new HashMap<>();
     public HashMap<String, IRStringConst> IRstringMap = new HashMap<>();
     public ArrayList<IRFuncDeclare> IRBuiltinFunc = new ArrayList<>();
 

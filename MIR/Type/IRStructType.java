@@ -6,6 +6,7 @@ import java.util.HashMap;
 public class IRStructType extends IRBaseType {
     public ArrayList<IRBaseType> memberType = new ArrayList<>();
     public HashMap<String, Integer> memberMap = new HashMap<>();
+    public boolean constructor = false;
     public IRStructType(String content, int size) {
         super(content, size);
     }

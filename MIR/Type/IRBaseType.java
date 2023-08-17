@@ -10,8 +10,6 @@ public abstract class IRBaseType {
 
     public abstract String toString();
 
-
-
     public boolean equals(Object obj) {
         if (!content.equals(((IRBaseType) obj).content)) {
             return false;
