@@ -43,6 +43,7 @@ public class IRBuilder implements ASTVisitor {
         program.IRBuiltinFunc.add(new IRFuncDeclare("__gen_streq", CharStar, CharStar, CharStar));
         program.IRBuiltinFunc.add(new IRFuncDeclare("__gen_strneq", CharStar, CharStar, CharStar));
         program.IRBuiltinFunc.add(new IRFuncDeclare("__malloc", CharStar, Int));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("__size", Int, CharStar));
     }
 
     public String handleString(String str) {
@@ -99,11 +100,7 @@ public class IRBuilder implements ASTVisitor {
                 IRType = new IRVoidType();
                 break;
             default:
-                if (program.IRclassMap.containsKey(type.content)) {
-                    IRStructType newType = new IRStructType(type.content, 0);
-                    program.IRclassMap.put(type.content, newType);
-                }
-                IRType = program.IRclassMap.get(type.content);
+                IRType = new IRPtrType(program.IRclassMap.get(type.content), 0);
                 //for other class
         }
         if (type.dim > 0) {
@@ -112,13 +109,19 @@ public class IRBuilder implements ASTVisitor {
         return IRType;
     }
 
+    public void declareClass(DefineClassNode it) {
+        IRStructType struct = new IRStructType(it.className, 0);
+        program.classes.add(struct);
+        program.IRclassMap.put(it.className, struct);
+    }
+
     public void declareFunc(DefineFunctionNode it) {
         Function func = new Function(it.funcName, getIRType(it.type));
         program.functions.add(func);
         if (it.paramsList != null) {
             for (int i = 0; i <= it.paramsList.identifiers.size(); i++) {
                 IRRegister reg = new IRRegister(it.paramsList.identifiers.get(i), getIRType(it.paramsList.types.get(i)));//register allocated for parameters
-                inFunc.params.add(reg);
+                func.params.add(reg);
             }
         }
         gScope.IRfuncMap.put(func.funcName, func);
@@ -191,6 +194,7 @@ public class IRBuilder implements ASTVisitor {
         IRCall callInst = new IRCall(curBlock, malloc_head, VoidStar, "__malloc");
         callInst.args.add(malloc_size);
         curBlock.addInst(callInst);
+        curBlock.addInst(new IRStore(curBlock, malloc_head, getVal(siz.get(index), false)));
 
         IRRegister array_head = new IRRegister("array_ptr", type);
         IRGetElementPtr getPtrInst = new IRGetElementPtr(curBlock, malloc_head, type, array_head);
@@ -296,10 +300,10 @@ public class IRBuilder implements ASTVisitor {
         else {
             it.entity = new IRRegister("new_expr", getIRType(it.type));
             IRCall callInst = new IRCall(curBlock, (IRRegister) it.entity, getIRType(it.type), "__malloc");
-            IRStructType classType = (IRStructType) (getIRType(it.type));
-            callInst.args.add(new IRIntConst(classType.size));
+            IRPtrType classType = (IRPtrType) (getIRType(it.type));
+            callInst.args.add(new IRIntConst(classType.type.size));
             curBlock.addInst(callInst);
-            if (classType.constructor) {
+            if (((IRStructType) classType.type).constructor) {
                 curBlock.addInst(new IRCall(curBlock, null, new IRVoidType(), it.type.content + "__" + it.type.content));
             }
         }
@@ -323,7 +327,29 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(MemberExprNode it) {
-
+        it.obj.accept(this);
+        IRStructType struct = program.IRclassMap.get(it.obj.type.content);
+        if (it.memberFunc != null) {
+            if (it.obj.type.dim > 0) {
+                if (it.memberFunc.func.equals("size")) {
+                    IRRegister res = new IRRegister("size", new IRIntType(32));
+                    IRCall callInst = new IRCall(curBlock, res, new IRIntType(32), "__size");
+                    callInst.args.add(getVal(it.obj, false));
+                    curBlock.addInst(callInst);
+                    it.entity = res;
+                    return;
+                }
+            }
+            it.memberFunc.accept(this);
+            it.entity = it.memberFunc.entity;
+        }
+        if (it.member != null) {
+            IRRegister res = new IRRegister("member", struct.memberType.get(struct.memberMap.get(it.member)));
+            IRGetElementPtr getPtrInst = new IRGetElementPtr(curBlock, it.obj.addr, struct, res);
+            getPtrInst.idx.add(new IRIntConst(struct.memberMap.get(it.member)));
+            curBlock.addInst(getPtrInst);
+            it.addr = res;
+        }
     }
 
     @Override
@@ -807,12 +833,39 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(DefineClassNode it) {
+        curScope = new Scope(curScope);
+        curScope.inClass = it;
+        IRStructType struct = program.IRclassMap.get(it.className);
 
+        for (VarAssignStmtNode nxt: it.varMap.values()) {
+            struct.putMember(nxt.assignTo, getIRType(nxt.type));
+        }
+
+        for (var nxt: it.functions) {
+            nxt.funcName = it.className + "__" + nxt.funcName;
+            nxt.accept(this);
+        }
+
+        if (it.constructor != null) {
+            it.constructor.accept(this);
+            struct.constructor = true;
+        }
+        curScope = curScope.parentScope;
     }
 
     @Override
     public void visit(DefineConstructFunctionNode it) {
-
+        Function func = new Function(it.className + "__" + it.className, new IRVoidType());
+        inFunc = func;
+        curBlock = new BasicBlock("entry", inFunc, false);
+        inFunc.blocks.add(curBlock);
+        curScope = new Scope(curScope);
+        for (var nxt: it.stmts) {
+            nxt.accept(this);
+        }
+        curScope = curScope.parentScope;
+        inFunc = null;
+        curBlock = null;
     }
 
     @Override
@@ -871,11 +924,19 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(RootNode it) {
         for (var nxt: it.Defs) {
+            if (nxt  instanceof DefineClassNode) {
+                declareClass((DefineClassNode) nxt);
+            }
             if (nxt instanceof DefineVarStmtNode) {
                 declareGlobalVar((DefineVarStmtNode) nxt);
             }
             if (nxt instanceof DefineFunctionNode) {
                 declareFunc((DefineFunctionNode) nxt);
+            }
+        }
+        for (var nxt: it.Defs) {
+            if (nxt instanceof DefineClassNode) {
+                nxt.accept(this);
             }
         }
         if (!gScope.varMap.isEmpty()) {

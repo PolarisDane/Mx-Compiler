@@ -88,5 +88,8 @@ char* __malloc(int size) {
     return malloc(size);
 }
 
+int __size(char* s) {
+    return *(s - 4);
+}
 
 

@@ -14,11 +14,13 @@ public class IRStructType extends IRBaseType {
     public void putMember(String member, IRBaseType type) {
         memberType.add(type);
         memberMap.put(member, memberType.size() - 1);
+        size += 32;
     }
 
     @Override
     public String toString() {
-        return "%struct." + content;
+        String ret = "%struct." + content;
+        return ret;
     }
 
 }
