@@ -36,51 +36,51 @@ char* toString(int x) {
   return s;
 }
 
-char* __gen_substring(char* s, int l, int r) {
+char* string__substring(char* s, int l, int r) {
   char* t = malloc(r - l + 1);
   for (int i = l; i < r; i++) t[i - l] = s[i];
   t[r - l] = '\0';
   return t;
 }
 
-int __gen_parseInt(char *s) {
+int string__parseInt(char *s) {
   int x;
   sscanf(s, "%d", &x);
   return x;
 }
 
-int __gen_ord(char* s, int x) {
+int string__ord(char* s, int x) {
     return s[x];
 }
 
-char* __gen_stradd(char* s, char* t) {
+char* string__stradd(char* s, char* t) {
   char* p = malloc(strlen(s) + strlen(t) + 1);
   strcpy(p, s);
   strcat(p, t);
   return p;
 }
 
-char __gen_strlt(char* s, char* t) {
+char string__strlt(char* s, char* t) {
     return strcmp(s, t) < 0;
 }
 
-char __gen_strle(char* s, char* t) {
+char string__strle(char* s, char* t) {
     return strcmp(s, t) <= 0;
 }
 
-char __gen_strgt(char* s, char* t) {
+char string__strgt(char* s, char* t) {
     return strcmp(s, t) > 0;
 }
 
-char __gen_strge(char* s, char* t) {
+char string__strge(char* s, char* t) {
     return strcmp(s, t) >= 0;
 }
 
-char __gen_streq(char* s, char* t) {
+char string__streq(char* s, char* t) {
     return strcmp(s, t) == 0;
 }
 
-char __gen_strneq(char* s, char* t) {
+char string__strneq(char* s, char* t) {
     return strcmp(s, t) != 0;
 }
 

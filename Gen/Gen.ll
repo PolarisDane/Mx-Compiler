@@ -88,7 +88,7 @@ define dso_local ptr @toString(i32 noundef %0) #0 {
 declare i32 @sprintf(ptr noundef, ptr noundef, ...) #3
 
 ; Function Attrs: noinline nounwind optnone uwtable
-define dso_local ptr @__gen_substring(ptr noundef %0, i32 noundef %1, i32 noundef %2) #0 {
+define dso_local ptr @string__substring(ptr noundef %0, i32 noundef %1, i32 noundef %2) #0 {
   %4 = alloca ptr, align 8
   %5 = alloca i32, align 4
   %6 = alloca i32, align 4
@@ -148,7 +148,7 @@ define dso_local ptr @__gen_substring(ptr noundef %0, i32 noundef %1, i32 nounde
 }
 
 ; Function Attrs: noinline nounwind optnone uwtable
-define dso_local i32 @__gen_parseInt(ptr noundef %0) #0 {
+define dso_local i32 @string__parseInt(ptr noundef %0) #0 {
   %2 = alloca ptr, align 8
   %3 = alloca i32, align 4
   store ptr %0, ptr %2, align 8
@@ -162,7 +162,7 @@ define dso_local i32 @__gen_parseInt(ptr noundef %0) #0 {
 declare i32 @__isoc99_sscanf(ptr noundef, ptr noundef, ...) #3
 
 ; Function Attrs: noinline nounwind optnone uwtable
-define dso_local i32 @__gen_ord(ptr noundef %0, i32 noundef %1) #0 {
+define dso_local i32 @string__ord(ptr noundef %0, i32 noundef %1) #0 {
   %3 = alloca ptr, align 8
   %4 = alloca i32, align 4
   store ptr %0, ptr %3, align 8
@@ -177,7 +177,7 @@ define dso_local i32 @__gen_ord(ptr noundef %0, i32 noundef %1) #0 {
 }
 
 ; Function Attrs: noinline nounwind optnone uwtable
-define dso_local ptr @__gen_stradd(ptr noundef %0, ptr noundef %1) #0 {
+define dso_local ptr @string__stradd(ptr noundef %0, ptr noundef %1) #0 {
   %3 = alloca ptr, align 8
   %4 = alloca ptr, align 8
   %5 = alloca ptr, align 8
@@ -211,7 +211,7 @@ declare ptr @strcpy(ptr noundef, ptr noundef) #3
 declare ptr @strcat(ptr noundef, ptr noundef) #3
 
 ; Function Attrs: noinline nounwind optnone uwtable
-define dso_local signext i8 @__gen_strlt(ptr noundef %0, ptr noundef %1) #0 {
+define dso_local signext i8 @string__strlt(ptr noundef %0, ptr noundef %1) #0 {
   %3 = alloca ptr, align 8
   %4 = alloca ptr, align 8
   store ptr %0, ptr %3, align 8
@@ -229,7 +229,7 @@ define dso_local signext i8 @__gen_strlt(ptr noundef %0, ptr noundef %1) #0 {
 declare i32 @strcmp(ptr noundef, ptr noundef) #4
 
 ; Function Attrs: noinline nounwind optnone uwtable
-define dso_local signext i8 @__gen_strle(ptr noundef %0, ptr noundef %1) #0 {
+define dso_local signext i8 @string__strle(ptr noundef %0, ptr noundef %1) #0 {
   %3 = alloca ptr, align 8
   %4 = alloca ptr, align 8
   store ptr %0, ptr %3, align 8
@@ -244,7 +244,7 @@ define dso_local signext i8 @__gen_strle(ptr noundef %0, ptr noundef %1) #0 {
 }
 
 ; Function Attrs: noinline nounwind optnone uwtable
-define dso_local signext i8 @__gen_strgt(ptr noundef %0, ptr noundef %1) #0 {
+define dso_local signext i8 @string__strgt(ptr noundef %0, ptr noundef %1) #0 {
   %3 = alloca ptr, align 8
   %4 = alloca ptr, align 8
   store ptr %0, ptr %3, align 8
@@ -259,7 +259,7 @@ define dso_local signext i8 @__gen_strgt(ptr noundef %0, ptr noundef %1) #0 {
 }
 
 ; Function Attrs: noinline nounwind optnone uwtable
-define dso_local signext i8 @__gen_strge(ptr noundef %0, ptr noundef %1) #0 {
+define dso_local signext i8 @string__strge(ptr noundef %0, ptr noundef %1) #0 {
   %3 = alloca ptr, align 8
   %4 = alloca ptr, align 8
   store ptr %0, ptr %3, align 8
@@ -274,7 +274,7 @@ define dso_local signext i8 @__gen_strge(ptr noundef %0, ptr noundef %1) #0 {
 }
 
 ; Function Attrs: noinline nounwind optnone uwtable
-define dso_local signext i8 @__gen_streq(ptr noundef %0, ptr noundef %1) #0 {
+define dso_local signext i8 @string__streq(ptr noundef %0, ptr noundef %1) #0 {
   %3 = alloca ptr, align 8
   %4 = alloca ptr, align 8
   store ptr %0, ptr %3, align 8
@@ -289,7 +289,7 @@ define dso_local signext i8 @__gen_streq(ptr noundef %0, ptr noundef %1) #0 {
 }
 
 ; Function Attrs: noinline nounwind optnone uwtable
-define dso_local signext i8 @__gen_strneq(ptr noundef %0, ptr noundef %1) #0 {
+define dso_local signext i8 @string__strneq(ptr noundef %0, ptr noundef %1) #0 {
   %3 = alloca ptr, align 8
   %4 = alloca ptr, align 8
   store ptr %0, ptr %3, align 8

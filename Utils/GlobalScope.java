@@ -47,7 +47,7 @@ public class GlobalScope extends Scope  {
         if (classMap.containsKey(it.className) || funcMap.containsKey(it.className)) {
             throw new semanticError("Ambiguous meaning of " + it.className, pos);
         }
-        System.out.println("Added class " + it.className);
+        //System.out.println("Added class " + it.className);
         classMap.put(it.className, it);
     }
     public boolean containsClass(String className, position pos) {

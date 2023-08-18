@@ -19,6 +19,7 @@ public class IRBuilder implements ASTVisitor {
     public BasicBlock breakNxt = null;
     public BasicBlock continueNxt = null;
     public Program program = new Program();
+    public boolean global_init = false;
 
     public IRBuilder(GlobalScope gScope) {
         this.gScope = gScope;
@@ -32,26 +33,18 @@ public class IRBuilder implements ASTVisitor {
         program.IRBuiltinFunc.add(new IRFuncDeclare("getString", CharStar));
         program.IRBuiltinFunc.add(new IRFuncDeclare("getInt", Int));
         program.IRBuiltinFunc.add(new IRFuncDeclare("toString", Int, CharStar));
-        program.IRBuiltinFunc.add(new IRFuncDeclare("__gen_substring", CharStar, CharStar));
-        program.IRBuiltinFunc.add(new IRFuncDeclare("__gen_parseInt", Int, CharStar));
-        program.IRBuiltinFunc.add(new IRFuncDeclare("__gen_ord", Int, CharStar));
-        program.IRBuiltinFunc.add(new IRFuncDeclare("__gen_stradd", CharStar, CharStar, CharStar));
-        program.IRBuiltinFunc.add(new IRFuncDeclare("__gen_strlt", CharStar, CharStar, CharStar));
-        program.IRBuiltinFunc.add(new IRFuncDeclare("__gen_strle", CharStar, CharStar, CharStar));
-        program.IRBuiltinFunc.add(new IRFuncDeclare("__gen_strgt", CharStar, CharStar, CharStar));
-        program.IRBuiltinFunc.add(new IRFuncDeclare("__gen_strge", CharStar, CharStar, CharStar));
-        program.IRBuiltinFunc.add(new IRFuncDeclare("__gen_streq", CharStar, CharStar, CharStar));
-        program.IRBuiltinFunc.add(new IRFuncDeclare("__gen_strneq", CharStar, CharStar, CharStar));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("string__substring", CharStar, CharStar));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("string__parseInt", Int, CharStar));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("string__ord", Int, CharStar));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("string__stradd", CharStar, CharStar, CharStar));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("string__strlt", CharStar, CharStar, CharStar));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("string__strle", CharStar, CharStar, CharStar));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("string__strgt", CharStar, CharStar, CharStar));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("string__strge", CharStar, CharStar, CharStar));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("string__streq", CharStar, CharStar, CharStar));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("string__strneq", CharStar, CharStar, CharStar));
         program.IRBuiltinFunc.add(new IRFuncDeclare("__malloc", CharStar, Int));
         program.IRBuiltinFunc.add(new IRFuncDeclare("__size", Int, CharStar));
-    }
-
-    public String handleString(String str) {
-        String newStr = str.substring(1, str.length() - 1);
-        newStr.replace("\"","\\22");
-        newStr.replace("\\", "\\\\");
-        newStr.replace("\n", "\\OA");
-        return newStr;
     }
 
     public Entity getVal(ExprNode expr, boolean is_i1) {
@@ -119,7 +112,7 @@ public class IRBuilder implements ASTVisitor {
         Function func = new Function(it.funcName, getIRType(it.type));
         program.functions.add(func);
         if (it.paramsList != null) {
-            for (int i = 0; i <= it.paramsList.identifiers.size(); i++) {
+            for (int i = 0; i < it.paramsList.identifiers.size(); i++) {
                 IRRegister reg = new IRRegister(it.paramsList.identifiers.get(i), getIRType(it.paramsList.types.get(i)));//register allocated for parameters
                 func.params.add(reg);
             }
@@ -147,7 +140,7 @@ public class IRBuilder implements ASTVisitor {
 //                    System.out.println("here");
                     if (nxt.assignVal.entity instanceof IRConst) {
                         gVar.initVal = getVal(nxt.assignVal, false);
-                    }
+                    }//useless???
                     else {
                         if (nxt.type.equals(builtin.IntType) || nxt.type.equals(builtin.BoolType)) {
                             gVar.initVal = new IRIntConst(0);
@@ -258,27 +251,36 @@ public class IRBuilder implements ASTVisitor {
         if (it.inClass == null && curScope.inClass != null) {
             it.inClass = curScope.inClass;
         }
+        String funcName;
         if (it.inClass == null) {
             funcNode = gScope.getFunc(it.func, it.pos);
+            funcName = funcNode.funcName;
         }
         else {
             funcNode = it.inClass.funcMap.get(it.func);
             if (funcNode == null) {
                 funcNode = gScope.getFunc(it.func, it.pos);
+                funcName = funcNode.funcName;
+            }
+            else {
+                funcName = it.inClass.className + "__" + funcNode.funcName;
             }
         }
         IRCall callInst;
         if (funcNode.type.equals(builtin.VoidType)) {
-            callInst = new IRCall(curBlock, null, getIRType(funcNode.type), funcNode.funcName);
+            callInst = new IRCall(curBlock, null, getIRType(funcNode.type), funcName);
         }
         else {
-            callInst = new IRCall(curBlock, new IRRegister("func." + funcNode.funcName, getIRType(funcNode.type)), getIRType(funcNode.type), funcNode.funcName);
+            callInst = new IRCall(curBlock, new IRRegister("func." + funcNode.funcName, getIRType(funcNode.type)), getIRType(funcNode.type), funcName);
         }
         if (it.args != null) {
             it.args.accept(this);
             for (int i = 0; i < it.args.exprs.size(); i++) {
                 callInst.args.add(getVal(it.args.exprs.get(i), false));
             }
+        }
+        if (it.inClass != null) {
+            callInst.args.add(it.thisPtr);
         }
         curBlock.addInst(callInst);
         it.entity = callInst.res;
@@ -304,7 +306,9 @@ public class IRBuilder implements ASTVisitor {
             callInst.args.add(new IRIntConst(classType.type.size));
             curBlock.addInst(callInst);
             if (((IRStructType) classType.type).constructor) {
-                curBlock.addInst(new IRCall(curBlock, null, new IRVoidType(), it.type.content + "__" + it.type.content));
+                IRCall callConstruct = new IRCall(curBlock, null, new IRVoidType(), it.type.content + "__" + it.type.content);
+                callConstruct.args.add(it.entity);
+                curBlock.addInst(callConstruct);
             }
         }
     }
@@ -340,12 +344,14 @@ public class IRBuilder implements ASTVisitor {
                     return;
                 }
             }
+            it.memberFunc.thisPtr = (IRRegister) getVal(it.obj, false);
             it.memberFunc.accept(this);
             it.entity = it.memberFunc.entity;
         }
         if (it.member != null) {
             IRRegister res = new IRRegister("member", struct.memberType.get(struct.memberMap.get(it.member)));
-            IRGetElementPtr getPtrInst = new IRGetElementPtr(curBlock, it.obj.addr, struct, res);
+            IRGetElementPtr getPtrInst = new IRGetElementPtr(curBlock, getVal(it.obj, false), struct, res);
+            getPtrInst.idx.add(new IRIntConst(0));
             getPtrInst.idx.add(new IRIntConst(struct.memberMap.get(it.member)));
             curBlock.addInst(getPtrInst);
             it.addr = res;
@@ -414,7 +420,7 @@ public class IRBuilder implements ASTVisitor {
                 switch(it.op) {
                     case "+":
                         it.entity = new IRRegister("binary_op", new IRPtrType(new IRIntType(8), 0));
-                        callInst = new IRCall(curBlock, (IRRegister) it.entity, it.entity.type, "__gen_stradd");
+                        callInst = new IRCall(curBlock, (IRRegister) it.entity, it.entity.type, "string__stradd");
                         callInst.args.add(getVal(it.lop, false));
                         callInst.args.add(getVal(it.rop, false));
                         curBlock.addInst(callInst);
@@ -422,7 +428,7 @@ public class IRBuilder implements ASTVisitor {
                     case "==":
                         res = new IRRegister("call_builtin", new IRIntType(8));
                         it.entity = new IRRegister("binary_op", new IRIntType(1));
-                        callInst = new IRCall(curBlock, res, res.type, "__gen_streq");
+                        callInst = new IRCall(curBlock, res, res.type, "string__streq");
                         callInst.args.add(getVal(it.lop, false));
                         callInst.args.add(getVal(it.rop, false));
                         curBlock.addInst(callInst);
@@ -431,7 +437,7 @@ public class IRBuilder implements ASTVisitor {
                     case "!=":
                         res = new IRRegister("call_builtin", new IRIntType(8));
                         it.entity = new IRRegister("binary_op", new IRIntType(1));
-                        callInst = new IRCall(curBlock, res, res.type, "__gen_strneq");
+                        callInst = new IRCall(curBlock, res, res.type, "string__strneq");
                         callInst.args.add(getVal(it.lop, false));
                         callInst.args.add(getVal(it.rop, false));
                         curBlock.addInst(callInst);
@@ -440,7 +446,7 @@ public class IRBuilder implements ASTVisitor {
                     case "<":
                         res = new IRRegister("call_builtin", new IRIntType(8));
                         it.entity = new IRRegister("binary_op", new IRIntType(1));
-                        callInst = new IRCall(curBlock, res, res.type, "__gen_strlt");
+                        callInst = new IRCall(curBlock, res, res.type, "string__strlt");
                         callInst.args.add(getVal(it.lop, false));
                         callInst.args.add(getVal(it.rop, false));
                         curBlock.addInst(callInst);
@@ -449,7 +455,7 @@ public class IRBuilder implements ASTVisitor {
                     case ">":
                         res = new IRRegister("call_builtin", new IRIntType(8));
                         it.entity = new IRRegister("binary_op", new IRIntType(1));
-                        callInst = new IRCall(curBlock, res, res.type, "__gen_strgt");
+                        callInst = new IRCall(curBlock, res, res.type, "string__strgt");
                         callInst.args.add(getVal(it.lop, false));
                         callInst.args.add(getVal(it.rop, false));
                         curBlock.addInst(callInst);
@@ -458,7 +464,7 @@ public class IRBuilder implements ASTVisitor {
                     case "<=":
                         res = new IRRegister("call_builtin", new IRIntType(8));
                         it.entity = new IRRegister("binary_op", new IRIntType(1));
-                        callInst = new IRCall(curBlock, res, res.type, "__gen_strle");
+                        callInst = new IRCall(curBlock, res, res.type, "string__strle");
                         callInst.args.add(getVal(it.lop, false));
                         callInst.args.add(getVal(it.rop, false));
                         curBlock.addInst(callInst);
@@ -467,7 +473,7 @@ public class IRBuilder implements ASTVisitor {
                     case ">=":
                         res = new IRRegister("call_builtin", new IRIntType(8));
                         it.entity = new IRRegister("binary_op", new IRIntType(1));
-                        callInst = new IRCall(curBlock, res, res.type, "__gen_strge");
+                        callInst = new IRCall(curBlock, res, res.type, "string__strge");
                         callInst.args.add(getVal(it.lop, false));
                         callInst.args.add(getVal(it.rop, false));
                         curBlock.addInst(callInst);
@@ -559,10 +565,10 @@ public class IRBuilder implements ASTVisitor {
                 prev.addInst(new IRBranch(curBlock, getVal(it.lop, true), rightBranch, shortCircuitbranch));
 
                 curBlock = rightBranch;
+                inFunc.blocks.add(rightBranch);
                 it.rop.accept(this);
                 storeVal(res, it.rop);
                 curBlock.addInst(new IRJump(curBlock, endBinaryOp.label));
-                inFunc.blocks.add(rightBranch);
 
                 curBlock = shortCircuitbranch;
                 curBlock.addInst(new IRStore(curBlock, res, new IRBoolConst(false)));
@@ -575,9 +581,10 @@ public class IRBuilder implements ASTVisitor {
                 prev.addInst(new IRBranch(curBlock, getVal(it.lop, true), shortCircuitbranch, rightBranch));
 
                 curBlock = rightBranch;
+                inFunc.blocks.add(rightBranch);
                 it.rop.accept(this);
                 storeVal(res, it.rop);
-                inFunc.blocks.add(rightBranch);
+                curBlock.addInst(new IRJump(curBlock, endBinaryOp.label));
 
                 curBlock = shortCircuitbranch;
                 curBlock.addInst(new IRStore(curBlock, res, new IRBoolConst(true)));
@@ -600,19 +607,25 @@ public class IRBuilder implements ASTVisitor {
 
         IRRegister res = new IRRegister("ternary", new IRPtrType(getIRType(it.type)));
 
-        prev.addInst(new IRAlloca(prev, getIRType(it.type), res));
+        if (!it.type.equals(builtin.VoidType)) {
+            prev.addInst(new IRAlloca(prev, getIRType(it.type), res));
+        }
         prev.addInst(new IRBranch(prev, getVal(it.condition, true), trueBranch, falseBranch));
 
         curBlock = trueBranch;
         it.trueVal.accept(this);
-        storeVal(res, it.trueVal);
-        trueBranch.addInst(new IRJump(curBlock, endTernary.label));
+        if (!it.trueVal.type.equals(builtin.VoidType)) {
+            storeVal(res, it.trueVal);
+        }
+        curBlock.addInst(new IRJump(curBlock, endTernary.label));
         inFunc.blocks.add(trueBranch);
 
         curBlock = falseBranch;
         it.falseVal.accept(this);
-        storeVal(res, it.falseVal);
-        falseBranch.addInst(new IRJump(curBlock, endTernary.label));
+        if (!it.falseVal.type.equals(builtin.VoidType)) {
+            storeVal(res, it.falseVal);
+        }
+        curBlock.addInst(new IRJump(curBlock, endTernary.label));
         inFunc.blocks.add(falseBranch);
 
         it.addr = res;
@@ -630,7 +643,20 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(AtomExprNode it) {
         if (it.isIdentifier) {
-            it.addr = curScope.getReg(it.content, true);
+            if (curScope.inClass != null) {
+                var classType = dereference(inFunc.thisPtr.type);
+                IRRegister val = new IRRegister("this.val", classType);
+                curBlock.addInst(new IRLoad(curBlock, val.type, val, inFunc.thisPtr));
+                IRRegister res = new IRRegister("this." + it.content, new IRPtrType(getIRType(it.type)));
+                IRGetElementPtr getPtrInst = new IRGetElementPtr(curBlock, val, dereference(classType), res);
+                getPtrInst.idx.add(new IRIntConst(0));
+                getPtrInst.idx.add(new IRIntConst(((IRStructType) dereference(classType)).memberMap.get(it.content)));
+                curBlock.addInst(getPtrInst);
+                it.addr = res;
+            }
+            if (it.addr == null) {
+                it.addr = curScope.getReg(it.content, true);
+            }
         }
         else {
             if (it.type.equals(builtin.IntType)) {
@@ -645,11 +671,10 @@ public class IRBuilder implements ASTVisitor {
                 it.entity = new IRNullConst();
             }
             else if (it.type.equals(builtin.StringType)) {
-                String str = handleString(it.content);
-                if (!program.IRstringMap.containsKey(str)) {
-                    program.IRstringMap.put(str, new IRStringConst(str));
+                if (!program.IRstringMap.containsKey(it.content)) {
+                    program.IRstringMap.put(it.content, new IRStringConst(it.content));
                 }
-                it.entity = program.IRstringMap.get(str);
+                it.entity = program.IRstringMap.get(it.content);
             }
             else if (it.content.equals("this")) {
 
@@ -688,7 +713,7 @@ public class IRBuilder implements ASTVisitor {
         curScope = new Scope(curScope);
         curBlock = trueBranch;
         it.trueThenWork.accept(this);
-        trueBranch.addInst(new IRJump(curBlock, endIf.label));
+        curBlock.addInst(new IRJump(curBlock, endIf.label));
         inFunc.blocks.add(trueBranch);
         curScope = curScope.parentScope;
 
@@ -696,7 +721,7 @@ public class IRBuilder implements ASTVisitor {
             curScope = new Scope(curScope);
             curBlock = falseBranch;
             it.falseThenWork.accept(this);
-            falseBranch.addInst(new IRJump(curBlock, endIf.label));
+            curBlock.addInst(new IRJump(curBlock, endIf.label));
             curScope = curScope.parentScope;
         }
         if (it.falseThenWork != null) {
@@ -763,6 +788,7 @@ public class IRBuilder implements ASTVisitor {
         BasicBlock whileEnd = new BasicBlock("while.end", inFunc);
         breakNxt = whileEnd;
         continueNxt = whileCond;
+        curBlock.addInst(new IRJump(curBlock, whileCond.label));
         curBlock = whileCond;
         it.condition.accept(this);
         curBlock.addInst(new IRBranch(curBlock, getVal(it.condition, true), whileBody, whileEnd));
@@ -857,12 +883,29 @@ public class IRBuilder implements ASTVisitor {
     public void visit(DefineConstructFunctionNode it) {
         Function func = new Function(it.className + "__" + it.className, new IRVoidType());
         inFunc = func;
+        program.functions.add(inFunc);
         curBlock = new BasicBlock("entry", inFunc, false);
         inFunc.blocks.add(curBlock);
         curScope = new Scope(curScope);
+        IRStructType struct = program.IRclassMap.get(curScope.inClass.className);
+        IRPtrType ptr = new IRPtrType(struct);
+        IRRegister thisAddr = new IRRegister("this.addr", new IRPtrType(ptr));
+        IRRegister thisReg = new IRRegister("this", ptr);
+        inFunc.params.add(thisReg);
+        inFunc.thisPtr = thisAddr;
+        curBlock.addInst(new IRAlloca(curBlock, thisAddr.type, thisAddr));
+        curBlock.addInst(new IRStore(curBlock, thisAddr, thisReg));
         for (var nxt: it.stmts) {
             nxt.accept(this);
         }
+        if (curBlock != null) {
+            if (!curBlock.returned) {
+                curBlock.addInst(new IRJump(curBlock, "return"));
+            }
+        }
+        curBlock = new BasicBlock("return", inFunc, false);
+        curBlock.addInst(new IRRet(curBlock, null));
+        inFunc.blocks.add(curBlock);
         curScope = curScope.parentScope;
         inFunc = null;
         curBlock = null;
@@ -875,12 +918,20 @@ public class IRBuilder implements ASTVisitor {
         curBlock = new BasicBlock("entry", inFunc, false);
         inFunc.blocks.add(curBlock);
         curScope = new Scope(curScope);
+        if (curScope.inClass != null) {
+            IRStructType struct = program.IRclassMap.get(curScope.inClass.className);
+            IRRegister thisReg = new IRRegister("this", struct);
+            inFunc.params.add(thisReg);
+        }
         if (it.paramsList != null) {
             it.paramsList.accept(this);
         }
         if (!it.type.equals(builtin.VoidType)) {
             inFunc.retReg = new IRRegister("retVal", new IRPtrType(getIRType(it.type)));
             curBlock.addInst(new IRAlloca(curBlock, getIRType(it.type), inFunc.retReg));
+        }
+        if (it.funcName.equals("main") && global_init) {
+            curBlock.addInst(new IRCall(curBlock, null, new IRVoidType(), "__mx_global_var_init"));
         }
         for (var nxt: it.stmts) {
             nxt.accept(this);
@@ -924,7 +975,7 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(RootNode it) {
         for (var nxt: it.Defs) {
-            if (nxt  instanceof DefineClassNode) {
+            if (nxt instanceof DefineClassNode) {
                 declareClass((DefineClassNode) nxt);
             }
             if (nxt instanceof DefineVarStmtNode) {
@@ -939,7 +990,7 @@ public class IRBuilder implements ASTVisitor {
                 nxt.accept(this);
             }
         }
-        if (!gScope.varMap.isEmpty()) {
+        if (!program.globalVar.isEmpty()) {
             Function init = new Function("__mx_global_var_init", new IRVoidType());
             inFunc = init;
             curBlock = new BasicBlock("entry", inFunc, false);
@@ -950,7 +1001,12 @@ public class IRBuilder implements ASTVisitor {
                 }
             }
             if (!inFunc.blocks.get(0).insts.isEmpty()) {
+                curBlock.addInst(new IRJump(curBlock, "return"));
+                curBlock = new BasicBlock("return", inFunc, false);
+                curBlock.addInst(new IRRet(curBlock, null));
+                inFunc.blocks.add(curBlock);
                 program.functions.add(inFunc);
+                global_init = true;
             }
             inFunc = null;
             curBlock = null;

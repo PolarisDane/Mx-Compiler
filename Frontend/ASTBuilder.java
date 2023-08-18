@@ -15,9 +15,9 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitFile_input(MxParser.File_inputContext ctx) {
         RootNode root = new RootNode(new position(ctx));
-        System.out.println("Visiting file_input-------------");
+        //System.out.println("Visiting file_input-------------");
         for (var it: ctx.children) {
-            System.out.println("Visiting under root---------");
+            //System.out.println("Visiting under root---------");
             if (it instanceof MxParser.DefineVarStmtContext) {
                 root.Defs.add((DefineVarStmtNode) visit(it));
             }
@@ -86,7 +86,7 @@ public class ASTBuilder extends MxParserBaseVisitor<ASTNode> {
     public ASTNode visitBlock(MxParser.BlockContext ctx) {
         BlockNode block = new BlockNode(new position(ctx));
         if (ctx.stmt() != null) {
-            System.out.println("ASTBuild stmts size: " + ctx.stmt().size());
+            //System.out.println("ASTBuild stmts size: " + ctx.stmt().size());
             for (var it : ctx.stmt()) {
 //                var stmtNode = (StmtNode) visit(it);
 //                if (stmtNode instanceof ExprStmtNode) {

@@ -3,6 +3,7 @@ package MIR;
 import MIR.Entity.IRRegister;
 import MIR.Inst.IRAlloca;
 import MIR.Type.IRBaseType;
+import MIR.Type.IRPtrType;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -14,6 +15,7 @@ public class Function {
     public ArrayList<IRAlloca> allocaInst = new ArrayList<>();
     public ArrayList<IRRegister> params = new ArrayList<>();
     public IRRegister retReg;
+    public IRRegister thisPtr;
 
     public Function(String funcName, IRBaseType type) {
         this.funcName = funcName;

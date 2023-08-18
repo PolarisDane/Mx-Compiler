@@ -17,10 +17,15 @@ public class Program {
 
     public Program() {}
 
+    public String handleString(String str) {
+        return str.replace("\\", "\\\\").replace("\n", "\\0A").replace("\"","\\22");
+    }
+
     public String toString() {
         String ret = "";
         for (IRStringConst val: IRstringMap.values()) {
-            ret += val.toString() + " = constant " + "[" + (val.val.length() + 1) + " x i8] c\"" + val.val + "\\00\"\n";
+            String str = handleString(val.val);
+            ret += val.toString() + " = constant " + "[" + (val.val.length() + 1) + " x i8] c\"" + str + "\\00\"\n";
         }
         for (var nxt: globalVar) {
             ret += nxt.toString() + " = global " + nxt.type.toString() + " " + nxt.initVal.toString() + "\n";

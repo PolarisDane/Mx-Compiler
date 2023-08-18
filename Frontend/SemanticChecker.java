@@ -278,6 +278,10 @@ public class SemanticChecker implements ASTVisitor {
         if (it.content.equals("this")) {
             it.type.content = curScope.inClass.className;
         }
+        if (it.content.contains("\"")) {
+            it.content = it.content.substring(1, it.content.length() - 1);
+            it.content = it.content.replace("\\\\", "\\").replace("\\n", "\n").replace("\\\"", "\"");
+        }
         if (it.isIdentifier) {
             if (!curScope.containsVariable(it.content, true)) {
                 throw new semanticError("Variable " + it.content + " not defined", it.pos);
@@ -443,7 +447,7 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(VarAssignStmtNode it) {
-        System.out.println("VarAssign visited");
+        //System.out.println("VarAssign visited");
         if (it.assignVal != null) {
             it.assignVal.accept(this);
             if (it.assignVal.type.equals(builtin.NullType) && it.type.isReference) {
@@ -500,7 +504,7 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(DefineFunctionNode it) {
-        System.out.println("Define function visited");
+        //System.out.println("Define function visited");
         curScope = new Scope(curScope);
         curScope.inFunc = it;
         curScope.returnScope = curScope;
