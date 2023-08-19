@@ -16,8 +16,6 @@ public class IRBuilder implements ASTVisitor {
     public BasicBlock curBlock = null;
 
     public Function inFunc = null;
-    public BasicBlock breakNxt = null;
-    public BasicBlock continueNxt = null;
     public Program program = new Program();
     public boolean global_init = false;
 
@@ -33,7 +31,8 @@ public class IRBuilder implements ASTVisitor {
         program.IRBuiltinFunc.add(new IRFuncDeclare("getString", CharStar));
         program.IRBuiltinFunc.add(new IRFuncDeclare("getInt", Int));
         program.IRBuiltinFunc.add(new IRFuncDeclare("toString", Int, CharStar));
-        program.IRBuiltinFunc.add(new IRFuncDeclare("string__substring", CharStar, CharStar));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("string__length", CharStar, Int));
+        program.IRBuiltinFunc.add(new IRFuncDeclare("string__substring", CharStar, CharStar, Int, Int));
         program.IRBuiltinFunc.add(new IRFuncDeclare("string__parseInt", Int, CharStar));
         program.IRBuiltinFunc.add(new IRFuncDeclare("string__ord", Int, CharStar));
         program.IRBuiltinFunc.add(new IRFuncDeclare("string__stradd", CharStar, CharStar, CharStar));
@@ -106,10 +105,23 @@ public class IRBuilder implements ASTVisitor {
         IRStructType struct = new IRStructType(it.className, 0);
         program.classes.add(struct);
         program.IRclassMap.put(it.className, struct);
+        for (var nxt: it.functions) {
+            declareFunc(nxt, it.className);
+        }
     }
 
-    public void declareFunc(DefineFunctionNode it) {
-        Function func = new Function(it.funcName, getIRType(it.type));
+    public void declareFunc(DefineFunctionNode it, String className) {
+        Function func;
+        if (className != null) {
+            func = new Function(className + "__" + it.funcName, getIRType(it.type));
+            IRStructType struct = program.IRclassMap.get(className);
+            IRPtrType ptr = new IRPtrType(struct);
+            IRRegister thisReg = new IRRegister("this", ptr);
+            func.params.add(thisReg);
+        }
+        else {
+            func = new Function(it.funcName, getIRType(it.type));
+        }
         program.functions.add(func);
         if (it.paramsList != null) {
             for (int i = 0; i < it.paramsList.identifiers.size(); i++) {
@@ -180,7 +192,7 @@ public class IRBuilder implements ASTVisitor {
         IRBaseType VoidStar = new IRPtrType(new IRIntType(8), 0);
         IRRegister tmp_reg = new IRRegister("tmp_reg", new IRIntType(32));
         IRRegister malloc_size = new IRRegister("malloc_size", new IRIntType(32));
-        curBlock.addInst(new IRBinaryOp(curBlock, tmp_reg, new IRIntType(32), "mul", new IRIntConst(nxt_type.size), getVal(siz.get(index), false)));
+        curBlock.addInst(new IRBinaryOp(curBlock, tmp_reg, new IRIntType(32), "mul", new IRIntConst(nxt_type.size / 8), getVal(siz.get(index), false)));
         curBlock.addInst(new IRBinaryOp(curBlock, malloc_size, new IRIntType(32), "add", tmp_reg, new IRIntConst(4)));
 
         IRRegister malloc_head = new IRRegister("malloc_head", VoidStar);
@@ -252,18 +264,21 @@ public class IRBuilder implements ASTVisitor {
             it.inClass = curScope.inClass;
         }
         String funcName;
+        boolean funcInClass = false;
         if (it.inClass == null) {
             funcNode = gScope.getFunc(it.func, it.pos);
             funcName = funcNode.funcName;
         }
         else {
+            funcInClass = true;
             funcNode = it.inClass.funcMap.get(it.func);
-            if (funcNode == null) {
-                funcNode = gScope.getFunc(it.func, it.pos);
-                funcName = funcNode.funcName;
+            if (funcNode != null) {
+                funcName = it.inClass.className + "__" + funcNode.funcName;
             }
             else {
-                funcName = it.inClass.className + "__" + funcNode.funcName;
+                funcInClass = false;
+                funcNode = gScope.getFunc(it.func, it.pos);
+                funcName = funcNode.funcName;
             }
         }
         IRCall callInst;
@@ -273,14 +288,17 @@ public class IRBuilder implements ASTVisitor {
         else {
             callInst = new IRCall(curBlock, new IRRegister("func." + funcNode.funcName, getIRType(funcNode.type)), getIRType(funcNode.type), funcName);
         }
+        if (funcInClass) {
+            if (inFunc != null && inFunc.thisPtr != null && it.thisPtr == null) {
+                it.thisPtr = inFunc.params.get(0);
+            }
+            callInst.args.add(it.thisPtr);
+        }
         if (it.args != null) {
             it.args.accept(this);
             for (int i = 0; i < it.args.exprs.size(); i++) {
                 callInst.args.add(getVal(it.args.exprs.get(i), false));
             }
-        }
-        if (it.inClass != null) {
-            callInst.args.add(it.thisPtr);
         }
         curBlock.addInst(callInst);
         it.entity = callInst.res;
@@ -303,7 +321,7 @@ public class IRBuilder implements ASTVisitor {
             it.entity = new IRRegister("new_expr", getIRType(it.type));
             IRCall callInst = new IRCall(curBlock, (IRRegister) it.entity, getIRType(it.type), "__malloc");
             IRPtrType classType = (IRPtrType) (getIRType(it.type));
-            callInst.args.add(new IRIntConst(classType.type.size));
+            callInst.args.add(new IRIntConst(classType.type.size / 8));
             curBlock.addInst(callInst);
             if (((IRStructType) classType.type).constructor) {
                 IRCall callConstruct = new IRCall(curBlock, null, new IRVoidType(), it.type.content + "__" + it.type.content);
@@ -392,20 +410,24 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(SingleExprNode it) {
         it.obj.accept(this);
-        IRRegister res = new IRRegister("single_expr" , new IRIntType(32));
         if (it.op.equals("+")) {
             //nothing here
         }
         else if (it.op.equals("-")) {
+            IRRegister res = new IRRegister("single_expr" , new IRIntType(32));
             curBlock.addInst(new IRBinaryOp(curBlock, res, new IRIntType(32), "sub", new IRIntConst(0), getVal(it.obj, false)));
+            it.entity = res;
         }
         else if (it.op.equals("!")) {
+            IRRegister res = new IRRegister("single_expr" , new IRIntType(8));
             curBlock.addInst(new IRBinaryOp(curBlock, res, new IRIntType(8), "xor", new IRIntConst(1), getVal(it.obj, false)));
+            it.entity = res;
         }
         else if (it.op.equals("~")) {
+            IRRegister res = new IRRegister("single_expr" , new IRIntType(32));
             curBlock.addInst(new IRBinaryOp(curBlock, res, new IRIntType(32), "xor", new IRIntConst(-1), getVal(it.obj, false)));
+            it.entity = res;
         }
-        it.entity = res;
     }
 
     @Override
@@ -550,7 +572,7 @@ public class IRBuilder implements ASTVisitor {
             }
             else {
                 IRRegister res = new IRRegister("binary_op", new IRIntType(1));
-                curBlock.addInst(new IRIcmp(curBlock, res, op, new IRIntType(32), getVal(it.lop, false), getVal(it.rop, false)));
+                curBlock.addInst(new IRIcmp(curBlock, res, op, getIRType(it.lop.type), getVal(it.lop, false), getVal(it.rop, false)));
                 it.entity = res;
             }
         }//non short-circuit value
@@ -643,7 +665,8 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(AtomExprNode it) {
         if (it.isIdentifier) {
-            if (curScope.inClass != null) {
+            it.addr = curScope.getReg(it.content, true);
+            if (curScope.inClass != null && it.addr == null) {
                 var classType = dereference(inFunc.thisPtr.type);
                 IRRegister val = new IRRegister("this.val", classType);
                 curBlock.addInst(new IRLoad(curBlock, val.type, val, inFunc.thisPtr));
@@ -653,9 +676,6 @@ public class IRBuilder implements ASTVisitor {
                 getPtrInst.idx.add(new IRIntConst(((IRStructType) dereference(classType)).memberMap.get(it.content)));
                 curBlock.addInst(getPtrInst);
                 it.addr = res;
-            }
-            if (it.addr == null) {
-                it.addr = curScope.getReg(it.content, true);
             }
         }
         else {
@@ -677,7 +697,7 @@ public class IRBuilder implements ASTVisitor {
                 it.entity = program.IRstringMap.get(it.content);
             }
             else if (it.content.equals("this")) {
-
+                it.addr = inFunc.thisPtr;
             }
         }
     }
@@ -739,8 +759,8 @@ public class IRBuilder implements ASTVisitor {
         BasicBlock forInc = new BasicBlock("for.inc", inFunc);
         BasicBlock forBody = new BasicBlock("for.body", inFunc);
         BasicBlock forEnd = new BasicBlock("for.end", inFunc);
-        breakNxt = forEnd;
-        continueNxt = forInc;
+        curScope.breakNxt = forEnd;
+        curScope.continueNxt = forInc;
         if (it.defInit != null) {
             it.defInit.accept(this);
         }
@@ -786,8 +806,8 @@ public class IRBuilder implements ASTVisitor {
         BasicBlock whileCond = new BasicBlock("while.cond", inFunc);
         BasicBlock whileBody = new BasicBlock("while.body", inFunc);
         BasicBlock whileEnd = new BasicBlock("while.end", inFunc);
-        breakNxt = whileEnd;
-        continueNxt = whileCond;
+        curScope.breakNxt = whileEnd;
+        curScope.continueNxt = whileCond;
         curBlock.addInst(new IRJump(curBlock, whileCond.label));
         curBlock = whileCond;
         it.condition.accept(this);
@@ -809,12 +829,12 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(BreakStmtNode it) {
-        curBlock.addInst(new IRJump(curBlock, breakNxt.label));
+        curBlock.addInst(new IRJump(curBlock, curScope.breakNxt.label));
     }
 
     @Override
     public void visit(ContinueStmtNode it) {
-        curBlock.addInst(new IRJump(curBlock, continueNxt.label));
+        curBlock.addInst(new IRJump(curBlock, curScope.continueNxt.label));
     }
 
     @Override
@@ -848,12 +868,17 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(ParamsListNode it) {
-        for (int i = 0; i < it.identifiers.size(); i++) {
+        boolean inClass = curScope.inClass != null;
+        for (int i = 0; i < inFunc.params.size(); i++) {
             IRRegister reg = inFunc.params.get(i);
             IRRegister addr = new IRRegister(reg.name + ".addr", new IRPtrType(reg.type));
-            curBlock.addInst(new IRAlloca(curBlock, new IRIntType(32), addr));
+            curBlock.addInst(new IRAlloca(curBlock, new IRPtrType(reg.type), addr));
             curBlock.addInst(new IRStore(curBlock, addr, reg));
-            curScope.entityMap.put(it.identifiers.get(i), addr);
+            if (inClass && i == 0) {
+                inFunc.thisPtr = addr;
+                continue;
+            }
+            curScope.entityMap.put(it.identifiers.get(inClass ? i - 1 : i), addr);
         }
     }
 
@@ -868,7 +893,6 @@ public class IRBuilder implements ASTVisitor {
         }
 
         for (var nxt: it.functions) {
-            nxt.funcName = it.className + "__" + nxt.funcName;
             nxt.accept(this);
         }
 
@@ -913,18 +937,29 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(DefineFunctionNode it) {
-        Function func = gScope.IRfuncMap.get(it.funcName);
+
+        Function func;
+        if (curScope.inClass != null) {
+            func = gScope.IRfuncMap.get(curScope.inClass.className + "__" + it.funcName);
+        }
+        else {
+            func = gScope.IRfuncMap.get(it.funcName);
+        }
         inFunc = func;
         curBlock = new BasicBlock("entry", inFunc, false);
         inFunc.blocks.add(curBlock);
         curScope = new Scope(curScope);
-        if (curScope.inClass != null) {
-            IRStructType struct = program.IRclassMap.get(curScope.inClass.className);
-            IRRegister thisReg = new IRRegister("this", struct);
-            inFunc.params.add(thisReg);
-        }
         if (it.paramsList != null) {
             it.paramsList.accept(this);
+        }
+        else if (curScope.inClass != null){
+            IRStructType struct = program.IRclassMap.get(curScope.inClass.className);
+            IRPtrType ptr = new IRPtrType(struct);
+            IRRegister thisAddr = new IRRegister("this.addr", new IRPtrType(ptr));
+            IRRegister thisReg = inFunc.params.get(0);
+            inFunc.thisPtr = thisAddr;
+            curBlock.addInst(new IRAlloca(curBlock, thisAddr.type, thisAddr));
+            curBlock.addInst(new IRStore(curBlock, thisAddr, thisReg));
         }
         if (!it.type.equals(builtin.VoidType)) {
             inFunc.retReg = new IRRegister("retVal", new IRPtrType(getIRType(it.type)));
@@ -982,7 +1017,7 @@ public class IRBuilder implements ASTVisitor {
                 declareGlobalVar((DefineVarStmtNode) nxt);
             }
             if (nxt instanceof DefineFunctionNode) {
-                declareFunc((DefineFunctionNode) nxt);
+                declareFunc((DefineFunctionNode) nxt, null);
             }
         }
         for (var nxt: it.Defs) {

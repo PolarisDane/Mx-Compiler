@@ -2,6 +2,7 @@ package Utils;
 
 import java.util.HashMap;
 import AST.*;
+import MIR.BasicBlock;
 import MIR.Entity.IRRegister;
 import MIR.Type.IRBaseType;
 import Utils.error.semanticError;
@@ -15,6 +16,8 @@ public class Scope {
     public DefineFunctionNode inFunc;
     public boolean inConstructor = false;
     public boolean returned = false;
+    public BasicBlock breakNxt = null;
+    public BasicBlock continueNxt = null;
     public Scope returnScope;
 
     public Scope() {}
@@ -26,6 +29,8 @@ public class Scope {
         this.inConstructor = parentScope.inConstructor;
         this.inLoop = parentScope.inLoop;
         this.returnScope = parentScope.returnScope;
+        this.breakNxt = parentScope.breakNxt;
+        this.continueNxt = parentScope.continueNxt;
     }
 
     public IRRegister getReg(String name, boolean lookUpon) {

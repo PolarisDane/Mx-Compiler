@@ -13,6 +13,9 @@ public class IRStructType extends IRBaseType {
 
     public void putMember(String member, IRBaseType type) {
         memberType.add(type);
+        if (type.size < 32) {
+            memberType.add(new IRArrayType(new IRIntType(8), (32 - type.size) / 8));
+        }
         memberMap.put(member, memberType.size() - 1);
         size += 32;
     }

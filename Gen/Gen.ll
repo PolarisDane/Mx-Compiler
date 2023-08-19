@@ -88,6 +88,19 @@ define dso_local ptr @toString(i32 noundef %0) #0 {
 declare i32 @sprintf(ptr noundef, ptr noundef, ...) #3
 
 ; Function Attrs: noinline nounwind optnone uwtable
+define dso_local i32 @string__length(ptr noundef %0) #0 {
+  %2 = alloca ptr, align 8
+  store ptr %0, ptr %2, align 8
+  %3 = load ptr, ptr %2, align 8
+  %4 = call i64 @strlen(ptr noundef %3) #7
+  %5 = trunc i64 %4 to i32
+  ret i32 %5
+}
+
+; Function Attrs: nounwind readonly willreturn
+declare i64 @strlen(ptr noundef) #4
+
+; Function Attrs: noinline nounwind optnone uwtable
 define dso_local ptr @string__substring(ptr noundef %0, i32 noundef %1, i32 noundef %2) #0 {
   %4 = alloca ptr, align 8
   %5 = alloca i32, align 4
@@ -200,9 +213,6 @@ define dso_local ptr @string__stradd(ptr noundef %0, ptr noundef %1) #0 {
   %19 = load ptr, ptr %5, align 8
   ret ptr %19
 }
-
-; Function Attrs: nounwind readonly willreturn
-declare i64 @strlen(ptr noundef) #4
 
 ; Function Attrs: nounwind
 declare ptr @strcpy(ptr noundef, ptr noundef) #3
@@ -318,10 +328,9 @@ define dso_local i32 @__size(ptr noundef %0) #0 {
   %2 = alloca ptr, align 8
   store ptr %0, ptr %2, align 8
   %3 = load ptr, ptr %2, align 8
-  %4 = getelementptr inbounds i8, ptr %3, i64 -4
-  %5 = load i8, ptr %4, align 1
-  %6 = sext i8 %5 to i32
-  ret i32 %6
+  %4 = getelementptr inbounds i32, ptr %3, i64 -1
+  %5 = load i32, ptr %4, align 4
+  ret i32 %5
 }
 
 attributes #0 = { noinline nounwind optnone uwtable "frame-pointer"="all" "min-legal-vector-width"="0" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "tune-cpu"="generic" }

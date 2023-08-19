@@ -36,6 +36,10 @@ char* toString(int x) {
   return s;
 }
 
+int string__length(char* s) {
+    return strlen(s);
+}
+
 char* string__substring(char* s, int l, int r) {
   char* t = malloc(r - l + 1);
   for (int i = l; i < r; i++) t[i - l] = s[i];
@@ -88,8 +92,8 @@ char* __malloc(int size) {
     return malloc(size);
 }
 
-int __size(char* s) {
-    return *(s - 4);
+int __size(int* s) {
+    return *(s - 1);
 }
 
 

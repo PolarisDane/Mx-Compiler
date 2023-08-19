@@ -2,11 +2,11 @@ package MIR.Type;
 
 public class IRNullType extends IRBaseType {
     public IRNullType() {
-        super("null", 0);
+        super("ptr", 0);
     }
 
     @Override
     public String toString() {
-        return content;
+        return "ptr";
     }
 }
