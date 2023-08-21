@@ -150,17 +150,17 @@ public class IRBuilder implements ASTVisitor {
                 }
                 else {
 //                    System.out.println("here");
-                    if (nxt.assignVal.entity instanceof IRConst) {
-                        gVar.initVal = getVal(nxt.assignVal, false);
-                    }//useless???
-                    else {
+//                    if (nxt.assignVal.entity instanceof IRConst) {
+//                        gVar.initVal = getVal(nxt.assignVal, false);
+//                    }//useless???
+//                    else {
                         if (nxt.type.equals(builtin.IntType) || nxt.type.equals(builtin.BoolType)) {
                             gVar.initVal = new IRIntConst(0);
                         }
                         else {
                             gVar.initVal = new IRNullConst();
                         }
-                    }//initialization should be in init function
+//                    }//initialization should be in init function
                     storeVal(gVar, nxt.assignVal);
                 }
             }
@@ -341,9 +341,9 @@ public class IRBuilder implements ASTVisitor {
         it.array.accept(this);
         it.index.accept(this);
         IRRegister res = new IRRegister("array_ptr", dereference(getVal(it.array, false).type));
-        IRGetElementPtr inst = new IRGetElementPtr(curBlock, getVal(it.array, false), getIRType(it.type), res);
-        inst.idx.add(getVal(it.index, false));
-        curBlock.addInst(inst);
+        IRGetElementPtr getPtrinst = new IRGetElementPtr(curBlock, getVal(it.array, false), getIRType(it.type), res);
+        getPtrinst.idx.add(getVal(it.index, false));
+        curBlock.addInst(getPtrinst);
         it.addr = res;
     }
 
