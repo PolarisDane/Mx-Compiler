@@ -937,7 +937,6 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(DefineFunctionNode it) {
-
         Function func;
         if (curScope.inClass != null) {
             func = gScope.IRfuncMap.get(curScope.inClass.className + "__" + it.funcName);

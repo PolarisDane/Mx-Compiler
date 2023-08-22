@@ -1,5 +1,6 @@
 package MIR.Inst;
 
+import Backend.IRVisitor;
 import MIR.BasicBlock;
 
 public class IRJump extends IRBaseInst {
@@ -13,6 +14,10 @@ public class IRJump extends IRBaseInst {
     @Override
     public String toString() {
         return "br label %" + label;
+    }
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }
 //done

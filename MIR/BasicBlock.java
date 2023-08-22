@@ -1,5 +1,6 @@
 package MIR;
 
+import Backend.IRVisitor;
 import MIR.Inst.*;
 
 import java.util.ArrayList;
@@ -48,5 +49,9 @@ public class BasicBlock {
             ret = ret + inst + "\n";
         }
         return ret;
+    }
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

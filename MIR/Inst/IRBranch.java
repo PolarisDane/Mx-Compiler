@@ -1,5 +1,6 @@
 package MIR.Inst;
 
+import Backend.IRVisitor;
 import MIR.BasicBlock;
 import MIR.Entity.Entity;
 
@@ -18,6 +19,10 @@ public class IRBranch extends IRBaseInst {
     @Override
     public String toString() {
         return "br i1 " + condition.toString() + ", label %" + trueThenWork.label + ", label %" + falseThenWork.label;
+    }
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }
 //done

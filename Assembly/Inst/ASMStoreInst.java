@@ -13,6 +13,13 @@ public class ASMStoreInst extends ASMBaseInst {
         this.rs2 = rs2;
         this.offset = offset;
     }
+
+    public ASMStoreInst(int size, Reg rs1, Reg rs2) {
+        this.size = size;
+        this.rs1 = rs1;
+        this.rs2 = rs2;
+        this.offset = new Imm(0);
+    }
     @Override
     public String toString() {
         return "sw " + rs2.toString() + ", " + offset.toString() + "(" + rs1.toString() + ")";

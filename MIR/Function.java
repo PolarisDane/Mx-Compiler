@@ -1,5 +1,6 @@
 package MIR;
 
+import Backend.IRVisitor;
 import MIR.Entity.IRRegister;
 import MIR.Inst.IRAlloca;
 import MIR.Type.IRBaseType;
@@ -41,5 +42,9 @@ public class Function {
         }
         ret += "}\n";
         return ret;
+    }
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

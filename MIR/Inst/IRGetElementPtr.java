@@ -1,5 +1,6 @@
 package MIR.Inst;
 
+import Backend.IRVisitor;
 import MIR.BasicBlock;
 import MIR.Entity.Entity;
 import MIR.Entity.IRRegister;
@@ -27,6 +28,10 @@ public class IRGetElementPtr extends IRBaseInst {
             ret += ", " + idx.get(i).type.toString() + " " + idx.get(i).toString();
         }
         return ret;
+    }
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }
 //done

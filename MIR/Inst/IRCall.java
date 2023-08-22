@@ -1,5 +1,6 @@
 package MIR.Inst;
 
+import Backend.IRVisitor;
 import MIR.BasicBlock;
 import MIR.Entity.Entity;
 import MIR.Entity.IRRegister;
@@ -38,6 +39,10 @@ public class IRCall extends IRBaseInst {
         }
         ret = ret + ")";
         return ret;
+    }
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }
 //done

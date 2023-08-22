@@ -1,5 +1,6 @@
 package MIR.Inst;
 
+import Backend.IRVisitor;
 import MIR.BasicBlock;
 import MIR.Entity.Entity;
 import MIR.Entity.IRRegister;
@@ -20,6 +21,10 @@ public class IRLoad extends IRBaseInst{
     @Override
     public String toString() {
         return reg.toString() + " = load " + type.toString() + ", ptr " + addr.toString();
+    }
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }
 //done

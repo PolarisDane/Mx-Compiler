@@ -14,13 +14,19 @@ public class ASMLoadInst extends ASMBaseInst {
         this.offset = offset;
     }
 
-    public ASMLoadInst(Reg rd, Reg rs1) {
+    public ASMLoadInst(int size, Reg rd, Reg rs1) {
+        this.size = size;
         this.rd = rd;
         this.rs1 = rs1;
         this.offset = new Imm(0);
     }
     @Override
     public String toString() {
-        return "lw " + rd.toString() + ", " + offset.toString() + "(" + rs1.toString() + ")";
+        if (size == 32) {
+            return "lw " + rd.toString() + ", " + offset.toString() + "(" + rs1.toString() + ")";
+        }
+        else {
+            return "lb " + rd.toString() + ", " + offset.toString() + "(" + rs1.toString() + ")";
+        }
     }
 }

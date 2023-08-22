@@ -1,5 +1,6 @@
 package MIR.Inst;
 
+import Backend.IRVisitor;
 import MIR.BasicBlock;
 import MIR.Entity.Entity;
 
@@ -17,6 +18,10 @@ public class IRRet extends IRBaseInst {
             return "ret void";
         }
         return "ret " + returnVal.type + " " + returnVal.toString();
+    }
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }
 //done

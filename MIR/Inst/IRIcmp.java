@@ -1,5 +1,6 @@
 package MIR.Inst;
 
+import Backend.IRVisitor;
 import MIR.BasicBlock;
 import MIR.Entity.Entity;
 import MIR.Entity.IRRegister;
@@ -24,6 +25,10 @@ public class IRIcmp extends IRBaseInst {
     @Override
     public String toString() {
         return res.toString() + " = icmp " + cond.toString() + " " + type.toString() + " " + op1.toString() + ", " + op2.toString();
+    }
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }
 //done

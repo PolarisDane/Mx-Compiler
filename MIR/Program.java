@@ -1,5 +1,6 @@
 package MIR;
 
+import Backend.IRVisitor;
 import MIR.Entity.*;
 import MIR.Inst.*;
 import MIR.Type.*;
@@ -19,6 +20,10 @@ public class Program {
 
     public String handleString(String str) {
         return str.replace("\\", "\\\\").replace("\n", "\\0A").replace("\"","\\22");
+    }
+
+    public void setGlobalVar(ArrayList<IRGlobalVar> globalVar) {
+        this.globalVar = globalVar;
     }
 
     public String toString() {
@@ -55,5 +60,9 @@ public class Program {
         }
         ret += "\n";
         return ret;
+    }
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

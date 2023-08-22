@@ -1,5 +1,6 @@
 package MIR.Inst;
 
+import Backend.IRVisitor;
 import MIR.BasicBlock;
 import MIR.Entity.Entity;
 import MIR.Entity.IRRegister;
@@ -18,6 +19,10 @@ public class IRStore extends IRBaseInst{
     @Override
     public String toString() {
         return "store " + val.type.toString() + " " + val.toString() + ", ptr " + reg.toString();
+    }
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }
 //done
