@@ -32,7 +32,7 @@ public class RegAllocator {
                 visitAndAllocate(block);
             }
         }
-//        System.out.println(program.toString());
+        System.out.println(program.toString());
     }
 
     public void visitAndAllocate(ASMBlock block) {

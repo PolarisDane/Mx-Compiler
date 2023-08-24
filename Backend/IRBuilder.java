@@ -1050,6 +1050,7 @@ public class IRBuilder implements ASTVisitor {
                 nxt.accept(this);
             }
         }
+        program.work();
 //        System.out.println(program.toString());
     }
 }

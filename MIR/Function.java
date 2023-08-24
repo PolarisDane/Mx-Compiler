@@ -24,6 +24,12 @@ public class Function {
         this.retReg = new IRRegister("funcRet", type);
     }
 
+    public void work() {
+        for (var inst: allocaInst) {
+            blocks.get(0).insts.addFirst(inst);
+        }
+    }
+
     public String toString() {
         String ret = "";
         ret = "define dso_local " + type.toString() + " @" + funcName + "(";
@@ -34,9 +40,6 @@ public class Function {
             }
         }
         ret += ") {\n";
-        for (var inst: allocaInst) {
-            blocks.get(0).insts.addFirst(inst);
-        }
         for (var block: blocks) {
             ret += block.toString() + "\n";
         }

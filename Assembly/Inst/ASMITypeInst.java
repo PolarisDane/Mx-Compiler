@@ -16,6 +16,9 @@ public class ASMITypeInst extends ASMBaseInst {
 
     @Override
     public String toString() {
+        if (op.equals("snez") || op.equals("seqz")) {
+            return op + " " + rd.toString() + ", " + rs1.toString();
+        }
         return op + " " + rd.toString() + ", " + rs1.toString() + ", " + imm.toString();
     }
 }

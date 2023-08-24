@@ -14,8 +14,7 @@ public class GlobalString extends Global {
     public String toString() {
         String ret = "";
         ret += name + ":\n";
-        ret += "    .string " + "\"" + string + "\"\n";
-        ret += "\n";
+        ret += "    .string " + "\"" + string.replace("\\", "\\\\").replace("\n", "\\n").replace("\"", "\\\"") + "\"\n\n";
         return ret;
     }
 }

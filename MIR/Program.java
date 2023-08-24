@@ -26,6 +26,12 @@ public class Program {
         this.globalVar = globalVar;
     }
 
+    public void work() {
+        for (var func: functions) {
+            func.work();
+        }
+    }
+
     public String toString() {
         String ret = "";
         for (IRStringConst val: IRstringMap.values()) {
@@ -44,10 +50,6 @@ public class Program {
             ret += "%struct." + nxt.content + " = type { ";
             for (int i = 0; i < nxt.memberType.size(); i++) {
                 ret += nxt.memberType.get(i).toString();
-//                int rem = nxt.memberType.get(i).size % 32;
-//                if (rem != 0) {
-//                    ret += ", [" + ((32 - rem) / 8) + " x i8]";
-//                }
                 if (i != nxt.memberType.size() - 1) {
                     ret += ", ";
                 }

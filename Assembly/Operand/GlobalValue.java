@@ -27,7 +27,8 @@ public class GlobalValue extends Global {
     public String toString() {
         String ret = "";
         ret += name + ":\n";
-        ret += size == 32 ? ".word" : ".byte" + "\n";
+        ret += size == 32 ? "   .word  " : "    .byte  ";
+        ret += word + "\n\n";
         return ret;
     }
 }

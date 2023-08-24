@@ -51,9 +51,9 @@ public class InstSelector implements IRVisitor {
             curBlock.insts.add(new ASMLoadInst(size, dest, base, new Imm(offset)));
         }
         else {
-            VirtualReg tmp = new VirtualReg(32);
-            curBlock.insts.add(new ASMITypeInst(tmp, base, new Imm(offset), "add"));
-            curBlock.insts.add(new ASMLoadInst(size, dest, base));
+            VirtualReg res = new VirtualReg(32);
+            curBlock.insts.add(new ASMRTypeInst(res, base, immToReg(new Imm(offset)), "add"));
+            curBlock.insts.add(new ASMLoadInst(size, dest, res));
         }
     }
 
@@ -62,9 +62,9 @@ public class InstSelector implements IRVisitor {
             curBlock.insts.add(new ASMStoreInst(size, base, src, new Imm(offset)));
         }
         else {
-            VirtualReg tmp = new VirtualReg(32);
-            curBlock.insts.add(new ASMITypeInst(tmp, base, new Imm(offset), "add"));
-            curBlock.insts.add(new ASMStoreInst(size, base, src));
+            VirtualReg res = new VirtualReg(32);
+            curBlock.insts.add(new ASMRTypeInst(res, base, immToReg(new Imm(offset)), "add"));
+            curBlock.insts.add(new ASMStoreInst(size, res, src));
         }
     }
     @Override
@@ -84,7 +84,7 @@ public class InstSelector implements IRVisitor {
             program.functions.add(inFunc);
             nxt.accept(this);
         }
-        System.out.println(program.toString());
+//        System.out.println(program.toString());
     }
 
     @Override
@@ -107,46 +107,33 @@ public class InstSelector implements IRVisitor {
                 it.params.get(i).ASMReg = new VirtualReg(32);
             }
         }
-        inFunc.stackStart = Integer.max(maxArgsCnt - 8, 0) * 4 + 4;
-//        it.blocks.forEach(nxt -> {
-//            curBlock = blockMap.get(nxt.label);
-//            inFunc.blocks.add(curBlock);
-//            nxt.accept(this);
-//        });
-        for (int i = 0; i < it.blocks.size(); i++) {
-            curBlock = blockMap.get(it.blocks.get(i).label);
+        inFunc.argsStack = Integer.max(maxArgsCnt - 8, 0) * 4;
+        inFunc.stackStart = inFunc.argsStack + 4;
+        for (var nxt: it.blocks) {
+            curBlock = blockMap.get(nxt.label);
             inFunc.blocks.add(curBlock);
-            it.blocks.get(i).accept(this);
+            nxt.accept(this);
         }
-//        Iterator<BasicBlock> iter = it.blocks.iterator();
-//        while (iter.hasNext()) {
-//            BasicBlock block = iter.next();
-//            curBlock = blockMap.get(block.label);
-//            inFunc.blocks.add(curBlock);
-//            block.accept(this);
-//        }
-        inFunc.stackLength = inFunc.stackStart + VirtualReg.cnt * 4 + Integer.max(maxArgsCnt - 8, 0) * 4;
+        inFunc.stackLength = inFunc.stackStart + VirtualReg.cnt * 4;
         if (inFunc.stackLength % 16 != 0) {
             inFunc.stackLength += 16 - inFunc.stackLength % 16;
         }
-        inFunc.blocks.get(0).insts.addFirst(new ASMStoreInst(32, new PhyReg("sp"), new PhyReg("ra"), new Imm(Integer.max(maxArgsCnt - 8, 0) * 4)));
-        inFunc.blocks.get(0).insts.addFirst(new ASMITypeInst(new PhyReg("sp"), new PhyReg("sp"), new Imm(-inFunc.stackLength), "addi"));
-        inFunc.blocks.get(inFunc.blocks.size() - 1).insts.add(new ASMLoadInst(32, new PhyReg("ra"), new PhyReg("sp"), new Imm(Integer.max(maxArgsCnt - 8, 0) * 4)));
-        inFunc.blocks.get(inFunc.blocks.size() - 1).insts.add(new ASMITypeInst(new PhyReg("sp"), new PhyReg("sp"), new Imm(inFunc.stackLength), "addi"));
+        ASMBlock first = inFunc.blocks.get(0);
+        ASMBlock last = inFunc.blocks.get(inFunc.blocks.size() - 1);
+        first.insts.addFirst(new ASMStoreInst(32, new PhyReg("sp"), new PhyReg("ra"), new Imm(inFunc.argsStack)));
+        first.insts.addFirst(new ASMRTypeInst(new PhyReg("sp"), new PhyReg("sp"), new PhyReg("t0"), "add"));
+        first.insts.addFirst(new ASMLiInst(new PhyReg("t0"), new Imm(-inFunc.stackLength)));
+        last.insts.add(new ASMLoadInst(32, new PhyReg("ra"), new PhyReg("sp"), new Imm(inFunc.argsStack)));
+        last.insts.add(new ASMLiInst(new PhyReg("t0"), new Imm(inFunc.stackLength)));
+        last.insts.add(new ASMRTypeInst(new PhyReg("sp"), new PhyReg("sp"), new PhyReg("t0"), "add"));
         inFunc.blocks.get(inFunc.blocks.size() - 1).insts.add(new ASMRetInst());
     }
 
     @Override
     public void visit(BasicBlock it) {
-//        for (int i = 0; i < it.insts.size(); i++) {
-//            it.insts.get(i).accept(this);
-//        }
-        it.insts.forEach(nxt -> nxt.accept(this));
-//        Iterator<IRBaseInst> iter = it.insts.iterator();
-//        while (iter.hasNext()) {
-//            IRBaseInst inst = iter.next();
-//            inst.accept(this);
-//        }
+        for (var nxt: it.insts) {
+            nxt.accept(this);
+        }
     }
 
     @Override
@@ -219,7 +206,9 @@ public class InstSelector implements IRVisitor {
             curBlock.insts.add(new ASMRTypeInst(getReg(it.res), getReg(it.ptr), res, "add"));
         }//struct
         else {
-            curBlock.insts.add(new ASMRTypeInst(getReg(it.res), getReg(it.ptr), getReg(it.idx.get(0)), "add"));
+            VirtualReg res = new VirtualReg(32);
+            curBlock.insts.add(new ASMITypeInst(res, getReg(it.idx.get(0)), new Imm(2), "slli"));
+            curBlock.insts.add(new ASMRTypeInst(getReg(it.res), getReg(it.ptr), res, "add"));
         }//array
     }
     @Override
@@ -269,6 +258,7 @@ public class InstSelector implements IRVisitor {
         if (it.returnVal != null) {
             curBlock.insts.add(new ASMMvInst(new PhyReg("a0"), getReg(it.returnVal)));
         }
+        loadReg(32, new PhyReg("sp"), new PhyReg("ra"), inFunc.argsStack);
     }
 
     @Override
