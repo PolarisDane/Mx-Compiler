@@ -10,6 +10,6 @@ public class ASMJumpInst extends ASMBaseInst {
     }
     @Override
     public String toString() {
-        return "j " + dest.toString();
+        return "j " + dest.label;
     }
 }

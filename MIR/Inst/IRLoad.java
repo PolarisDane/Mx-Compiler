@@ -23,6 +23,7 @@ public class IRLoad extends IRBaseInst{
         return reg.toString() + " = load " + type.toString() + ", ptr " + addr.toString();
     }
 
+    @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
     }

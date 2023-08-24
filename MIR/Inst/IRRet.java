@@ -20,6 +20,7 @@ public class IRRet extends IRBaseInst {
         return "ret " + returnVal.type + " " + returnVal.toString();
     }
 
+    @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
     }

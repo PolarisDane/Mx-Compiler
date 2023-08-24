@@ -20,6 +20,7 @@ public class IRAlloca extends IRBaseInst{
         return res + " = alloca " + type;
     }
 
+    @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
     }

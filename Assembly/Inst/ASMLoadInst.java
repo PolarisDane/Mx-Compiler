@@ -4,7 +4,6 @@ import Assembly.Operand.*;
 
 public class ASMLoadInst extends ASMBaseInst {
     int size;
-    public Reg rd, rs1;
     public Imm offset;
 
     public ASMLoadInst(int size, Reg rd, Reg rs1, Imm offset) {

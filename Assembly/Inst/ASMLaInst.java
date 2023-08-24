@@ -3,7 +3,6 @@ package Assembly.Inst;
 import Assembly.Operand.*;
 
 public class ASMLaInst extends ASMBaseInst {
-    public Reg rd;
     public String symbol;
 
     public ASMLaInst(Reg rd, String symbol) {

@@ -4,7 +4,6 @@ import Assembly.Operand.*;
 
 public class ASMITypeInst extends ASMBaseInst {
 
-    public Reg rd, rs1;
     public Imm imm;
     public String op;
 

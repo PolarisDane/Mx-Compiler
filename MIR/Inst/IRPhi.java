@@ -32,6 +32,7 @@ public class IRPhi extends IRBaseInst {
         return ret;
     }
 
+    @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
     }

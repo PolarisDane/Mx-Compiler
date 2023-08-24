@@ -21,6 +21,7 @@ public class IRStore extends IRBaseInst{
         return "store " + val.type.toString() + " " + val.toString() + ", ptr " + reg.toString();
     }
 
+    @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
     }

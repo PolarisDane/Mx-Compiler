@@ -19,10 +19,20 @@ public class ASMFunction {
     public ASMBlock rootBlock = null;
     public ArrayList<PhyReg> phyRegs = new ArrayList<>();
     public int stackLength = 0;
+    public int stackStart = 0;
 
-    public ASMFunction() {
-        for (int i = 0; i < 32; i++) {
-            phyRegs.add(new PhyReg(phyRegName.get(i)));
+    public ASMFunction(String name) {
+        this.name = name;
+    }
+
+    public String toString() {
+        String ret = "";
+        ret += "    .section text\n";
+        ret += "    .globl " + name + "\n";
+        ret += name + ":\n";
+        for (var nxt: blocks) {
+            ret += nxt.toString();
         }
+        return ret;
     }
 }

@@ -41,6 +41,7 @@ public class IRCall extends IRBaseInst {
         return ret;
     }
 
+    @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
     }

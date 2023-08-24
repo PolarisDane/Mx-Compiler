@@ -25,6 +25,7 @@ public class IRTrunc extends IRBaseInst {
         return res.toString() + " = trunc " + fromType.toString() + " " + val.toString() + " to " + toType.toString();
     }
 
+    @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
     }

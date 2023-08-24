@@ -25,6 +25,7 @@ public class IRZext extends IRBaseInst {
         return res.toString() + " = zext " + fromType.toString() + " " + val.toString() + " to " + toType.toString();
     }
 
+    @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
     }

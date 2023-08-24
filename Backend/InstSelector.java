@@ -1,6 +1,8 @@
 package Backend;
 
 import Assembly.ASMBlock;
+import Assembly.ASMFunction;
+import Assembly.ASMProgram;
 import Assembly.Inst.*;
 import Assembly.Operand.*;
 import MIR.BasicBlock;
@@ -8,13 +10,18 @@ import MIR.Entity.*;
 import MIR.Function;
 import MIR.Inst.*;
 import MIR.Program;
+import MIR.Type.IRStructType;
 
 import java.util.HashMap;
+import java.util.Iterator;
 
 public class InstSelector implements IRVisitor {
     public HashMap<IRRegister, VirtualReg> regMap = new HashMap<>();
     public ASMBlock curBlock;
+    public ASMFunction inFunc;
     public HashMap<String, ASMBlock> blockMap = new HashMap<>();
+    public ASMProgram program = new ASMProgram();
+    public int blockCnt = 0;
 
     Reg immToReg(Imm imm) {
         VirtualReg vReg = new VirtualReg(32);
@@ -41,12 +48,12 @@ public class InstSelector implements IRVisitor {
 
     public void loadReg(int size, Reg base, Reg dest, int offset) {
         if (offset < (1 << 11)) {
-            curBlock.insts.add(new ASMLoadInst(size, base, dest, new Imm(offset)));
+            curBlock.insts.add(new ASMLoadInst(size, dest, base, new Imm(offset)));
         }
         else {
             VirtualReg tmp = new VirtualReg(32);
             curBlock.insts.add(new ASMITypeInst(tmp, base, new Imm(offset), "add"));
-            curBlock.insts.add(new ASMLoadInst(size, base, dest));
+            curBlock.insts.add(new ASMLoadInst(size, dest, base));
         }
     }
 
@@ -62,75 +69,129 @@ public class InstSelector implements IRVisitor {
     }
     @Override
     public void visit(Program it) {
-//        for (var nxt: it.globalVar) {
-//            nxt.ASMReg = new GlobalValue(nxt);
-//
-//        }
-//        for (var nxt: it.IRstringMap) {
-//
-//        }
-//        for (var nxt: it.functions) {
-//            nxt.accept(this);
-//        }
+        for (var nxt: it.globalVar) {
+            GlobalValue gVal = new GlobalValue(nxt);
+            program.gValues.add(gVal);
+            nxt.ASMReg = gVal;
+        }
+        for (var nxt: it.IRstringMap.values()) {
+            GlobalString gString = new GlobalString(nxt);
+            program.gStrings.add(gString);
+            nxt.ASMReg = gString;
+        }
+        for (var nxt: it.functions) {
+            inFunc = new ASMFunction(nxt.funcName);
+            program.functions.add(inFunc);
+            nxt.accept(this);
+        }
+        System.out.println(program.toString());
     }
 
     @Override
     public void visit(Function it) {
+        VirtualReg.cnt = 0;
+        int maxArgsCnt = 0;
         for (var nxt: it.blocks) {
-            nxt.accept(this);
+            blockMap.put(nxt.label, new ASMBlock(".BBL" + (++blockCnt)));
+            for (var inst: nxt.insts) {
+                if (inst instanceof IRCall) {
+                    maxArgsCnt = Integer.max(maxArgsCnt, ((IRCall) inst).args.size());
+                }
+            }
         }
+        for (int i = 0; i < it.params.size(); i++) {
+            if (i < 8) {
+                it.params.get(i).ASMReg = new PhyReg("a" + i);
+            }
+            else {
+                it.params.get(i).ASMReg = new VirtualReg(32);
+            }
+        }
+        inFunc.stackStart = Integer.max(maxArgsCnt - 8, 0) * 4 + 4;
+//        it.blocks.forEach(nxt -> {
+//            curBlock = blockMap.get(nxt.label);
+//            inFunc.blocks.add(curBlock);
+//            nxt.accept(this);
+//        });
+        for (int i = 0; i < it.blocks.size(); i++) {
+            curBlock = blockMap.get(it.blocks.get(i).label);
+            inFunc.blocks.add(curBlock);
+            it.blocks.get(i).accept(this);
+        }
+//        Iterator<BasicBlock> iter = it.blocks.iterator();
+//        while (iter.hasNext()) {
+//            BasicBlock block = iter.next();
+//            curBlock = blockMap.get(block.label);
+//            inFunc.blocks.add(curBlock);
+//            block.accept(this);
+//        }
+        inFunc.stackLength = inFunc.stackStart + VirtualReg.cnt * 4 + Integer.max(maxArgsCnt - 8, 0) * 4;
+        if (inFunc.stackLength % 16 != 0) {
+            inFunc.stackLength += 16 - inFunc.stackLength % 16;
+        }
+        inFunc.blocks.get(0).insts.addFirst(new ASMStoreInst(32, new PhyReg("sp"), new PhyReg("ra"), new Imm(Integer.max(maxArgsCnt - 8, 0) * 4)));
+        inFunc.blocks.get(0).insts.addFirst(new ASMITypeInst(new PhyReg("sp"), new PhyReg("sp"), new Imm(-inFunc.stackLength), "addi"));
+        inFunc.blocks.get(inFunc.blocks.size() - 1).insts.add(new ASMLoadInst(32, new PhyReg("ra"), new PhyReg("sp"), new Imm(Integer.max(maxArgsCnt - 8, 0) * 4)));
+        inFunc.blocks.get(inFunc.blocks.size() - 1).insts.add(new ASMITypeInst(new PhyReg("sp"), new PhyReg("sp"), new Imm(inFunc.stackLength), "addi"));
+        inFunc.blocks.get(inFunc.blocks.size() - 1).insts.add(new ASMRetInst());
     }
 
     @Override
     public void visit(BasicBlock it) {
-
+//        for (int i = 0; i < it.insts.size(); i++) {
+//            it.insts.get(i).accept(this);
+//        }
+        it.insts.forEach(nxt -> nxt.accept(this));
+//        Iterator<IRBaseInst> iter = it.insts.iterator();
+//        while (iter.hasNext()) {
+//            IRBaseInst inst = iter.next();
+//            inst.accept(this);
+//        }
     }
 
     @Override
     public void visit(IRAlloca it) {
-        curBlock.insts.add(new ASMITypeInst(new PhyReg("sp"), new PhyReg("sp"), new Imm(it.type.size / 8), "addi"));
+        curBlock.insts.add(new ASMITypeInst(getReg(it.res), new PhyReg("sp"), new Imm(inFunc.stackStart), "addi"));
+        inFunc.stackStart += 4;
     }
 
     @Override
     public void visit(IRBranch it) {
-        curBlock.insts.add(new ASMBeqInst(getReg(it.condition), blockMap.get(it.falseThenWork)));
-        it.falseThenWork.accept(this);
-        curBlock = new ASMBlock();
-        it.trueThenWork.accept(this);
+        curBlock.insts.add(new ASMBeqInst(getReg(it.condition), blockMap.get(it.falseThenWork.label)));
+        curBlock.insts.add(new ASMJumpInst(blockMap.get(it.trueThenWork.label)));
     }
 
     @Override
     public void visit(IRBinaryOp it) {
-        VirtualReg res = new VirtualReg(32);
         if (it.op.equals("add")) {
-            curBlock.insts.add(new ASMRTypeInst(res, getReg(it.op1), getReg(it.op2), "add"));
+            curBlock.insts.add(new ASMRTypeInst(getReg(it.res), getReg(it.op1), getReg(it.op2), "add"));
         }
         if (it.op.equals("sub")) {
-            curBlock.insts.add(new ASMRTypeInst(res, getReg(it.op1), getReg(it.op2), "sub"));
+            curBlock.insts.add(new ASMRTypeInst(getReg(it.res), getReg(it.op1), getReg(it.op2), "sub"));
         }
         if (it.op.equals("mul")) {
-            curBlock.insts.add(new ASMRTypeInst(res, getReg(it.op1), getReg(it.op2), "mul"));
+            curBlock.insts.add(new ASMRTypeInst(getReg(it.res), getReg(it.op1), getReg(it.op2), "mul"));
         }
         if (it.op.equals("sdiv")) {
-            curBlock.insts.add(new ASMRTypeInst(res, getReg(it.op1), getReg(it.op2), "div"));
+            curBlock.insts.add(new ASMRTypeInst(getReg(it.res), getReg(it.op1), getReg(it.op2), "div"));
         }
         if (it.op.equals("srem")) {
-            curBlock.insts.add(new ASMRTypeInst(res, getReg(it.op1), getReg(it.op2), "rem"));
+            curBlock.insts.add(new ASMRTypeInst(getReg(it.res), getReg(it.op1), getReg(it.op2), "rem"));
         }
         if (it.op.equals("and")) {
-            curBlock.insts.add(new ASMRTypeInst(res, getReg(it.op1), getReg(it.op2), "and"));
+            curBlock.insts.add(new ASMRTypeInst(getReg(it.res), getReg(it.op1), getReg(it.op2), "and"));
         }
         if (it.op.equals("or")) {
-            curBlock.insts.add(new ASMRTypeInst(res, getReg(it.op1), getReg(it.op2), "or"));
+            curBlock.insts.add(new ASMRTypeInst(getReg(it.res), getReg(it.op1), getReg(it.op2), "or"));
         }
         if (it.op.equals("xor")) {
-            curBlock.insts.add(new ASMRTypeInst(res, getReg(it.op1), getReg(it.op2), "xor"));
+            curBlock.insts.add(new ASMRTypeInst(getReg(it.res), getReg(it.op1), getReg(it.op2), "xor"));
         }
         if (it.op.equals("shl")) {
-            curBlock.insts.add(new ASMRTypeInst(res, getReg(it.op1), getReg(it.op2), "sll"));
+            curBlock.insts.add(new ASMRTypeInst(getReg(it.res), getReg(it.op1), getReg(it.op2), "sll"));
         }
         if (it.op.equals("ashr")) {
-            curBlock.insts.add(new ASMRTypeInst(res, getReg(it.op1), getReg(it.op2), "sra"));
+            curBlock.insts.add(new ASMRTypeInst(getReg(it.res), getReg(it.op1), getReg(it.op2), "sra"));
         }
     }
 
@@ -141,41 +202,50 @@ public class InstSelector implements IRVisitor {
                 curBlock.insts.add(new ASMMvInst(new PhyReg("a" + i), getReg(it.args.get(i))));
             }
             else {
-                storeReg(it.type.size, new PhyReg("sp"), getReg(it.args.get(i)), (i - 8) * 4);
+                storeReg(it.args.get(i).type.size, new PhyReg("sp"), getReg(it.args.get(i)), (i - 8) * 4);
             }
         }
         curBlock.insts.add(new ASMCallInst(it.funcName));
+        if (it.res != null) {
+            curBlock.insts.add(new ASMMvInst(getReg(it.res), new PhyReg("a0")));
+        }
     }
 
     @Override
     public void visit(IRGetElementPtr it) {
-
+        if (it.type instanceof IRStructType) {
+            VirtualReg res = new VirtualReg(32);
+            curBlock.insts.add(new ASMITypeInst(res, getReg(it.idx.get(1)), new Imm(2), "slli"));
+            curBlock.insts.add(new ASMRTypeInst(getReg(it.res), getReg(it.ptr), res, "add"));
+        }//struct
+        else {
+            curBlock.insts.add(new ASMRTypeInst(getReg(it.res), getReg(it.ptr), getReg(it.idx.get(0)), "add"));
+        }//array
     }
-
     @Override
     public void visit(IRIcmp it) {
         VirtualReg res = new VirtualReg(32);
         if (it.cond.equals("slt")) {
-            curBlock.insts.add(new ASMRTypeInst(res, getReg(it.op1), getReg(it.op2),"slt"));
+            curBlock.insts.add(new ASMRTypeInst(getReg(it.res), getReg(it.op1), getReg(it.op2),"slt"));
         }
         if (it.cond.equals("sle")) {
-            curBlock.insts.add(new ASMRTypeInst(res, getReg(it.op1), getReg(it.op2),"sgt"));
-            curBlock.insts.add(new ASMITypeInst(res, res, new Imm(1), "xori"));
+            curBlock.insts.add(new ASMRTypeInst(res, getReg(it.op2), getReg(it.op1),"slt"));
+            curBlock.insts.add(new ASMITypeInst(getReg(it.res), res, new Imm(1), "xori"));
         }
         if (it.cond.equals("sgt")) {
-            curBlock.insts.add(new ASMRTypeInst(res, getReg(it.op1), getReg(it.op2),"sgt"));
+            curBlock.insts.add(new ASMRTypeInst(getReg(it.res), getReg(it.op2), getReg(it.op1),"slt"));
         }
         if (it.cond.equals("sge")) {
             curBlock.insts.add(new ASMRTypeInst(res, getReg(it.op1), getReg(it.op2),"slt"));
-            curBlock.insts.add(new ASMITypeInst(res, res, new Imm(1), "xori"));
+            curBlock.insts.add(new ASMITypeInst(getReg(it.res), res, new Imm(1), "xori"));
         }
         if (it.cond.equals("eq")) {
             curBlock.insts.add(new ASMRTypeInst(res, getReg(it.op1), getReg(it.op2), "sub"));
-            curBlock.insts.add(new ASMITypeInst(res, res, new Imm(0), "seqz"));
+            curBlock.insts.add(new ASMITypeInst(getReg(it.res), res, new Imm(0), "seqz"));//not done
         }
         if (it.cond.equals("ne")) {
             curBlock.insts.add(new ASMRTypeInst(res, getReg(it.op1), getReg(it.op2), "sub"));
-            curBlock.insts.add(new ASMITypeInst(res, res, new Imm(0), "snez"));
+            curBlock.insts.add(new ASMITypeInst(getReg(it.res), res, new Imm(0), "snez"));//not done
         }
     }
 
@@ -199,7 +269,6 @@ public class InstSelector implements IRVisitor {
         if (it.returnVal != null) {
             curBlock.insts.add(new ASMMvInst(new PhyReg("a0"), getReg(it.returnVal)));
         }
-        curBlock.insts.add(new ASMJrInst());
     }
 
     @Override

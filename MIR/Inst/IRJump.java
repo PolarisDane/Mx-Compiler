@@ -16,6 +16,7 @@ public class IRJump extends IRBaseInst {
         return "br label %" + label;
     }
 
+    @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
     }

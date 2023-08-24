@@ -2,7 +2,7 @@ package MIR.Entity;
 
 import MIR.Type.IRIntType;
 
-public class IRBoolConst extends Entity {
+public class IRBoolConst extends IRConst {
     public boolean val;
 
     public IRBoolConst(boolean val) {

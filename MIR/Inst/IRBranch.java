@@ -21,6 +21,7 @@ public class IRBranch extends IRBaseInst {
         return "br i1 " + condition.toString() + ", label %" + trueThenWork.label + ", label %" + falseThenWork.label;
     }
 
+    @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
     }

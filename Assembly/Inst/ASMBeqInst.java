@@ -4,16 +4,15 @@ import Assembly.ASMBlock;
 import Assembly.Operand.*;
 
 public class ASMBeqInst extends ASMBaseInst {
-    public Reg src;
     public ASMBlock dest;
 
-    public ASMBeqInst(Reg src, ASMBlock dest) {
-        this.src = src;
+    public ASMBeqInst(Reg rs1, ASMBlock dest) {
+        this.rs1 = rs1;
         this.dest = dest;
     }
 
     @Override
     public String toString() {
-        return "beqz " + src.toString() + ", " + dest.toString();
+        return "beqz " + rs1.toString() + ", " + dest.label;
     }
 }

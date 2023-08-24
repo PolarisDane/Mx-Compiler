@@ -11,14 +11,19 @@ public class ASMBlock {
     public LinkedList<ASMBlock> pred = new LinkedList<>();
     public LinkedList<ASMBaseInst> insts = new LinkedList<>();
 
+    public ASMBlock(String label) {
+        this.label = label;
+    }
+
     public String toString() {
         String ret = "";
         if (label != null) {
-            ret += label + "\n";
+            ret += label + ":\n";
         }
         for (var inst: insts) {
             ret += " " + inst + "\n";
         }
+        ret += "\n";
         return ret;
     }
 }

@@ -27,6 +27,7 @@ public class IRIcmp extends IRBaseInst {
         return res.toString() + " = icmp " + cond.toString() + " " + type.toString() + " " + op1.toString() + ", " + op2.toString();
     }
 
+    @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
     }

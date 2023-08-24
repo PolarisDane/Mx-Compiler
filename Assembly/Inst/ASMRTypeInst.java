@@ -3,8 +3,6 @@ package Assembly.Inst;
 import Assembly.Operand.*;
 
 public class ASMRTypeInst extends ASMBaseInst {
-
-    public Reg rd, rs1, rs2;
     public String op;
 
     public ASMRTypeInst(Reg rd, Reg rs1, Reg rs2, String op) {
