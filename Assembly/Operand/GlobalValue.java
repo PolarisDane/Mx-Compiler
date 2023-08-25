@@ -1,9 +1,6 @@
 package Assembly.Operand;
 
-import MIR.Entity.IRBoolConst;
-import MIR.Entity.IRGlobalVar;
-import MIR.Entity.IRIntConst;
-import MIR.Entity.IRNullConst;
+import MIR.Entity.*;
 
 public class GlobalValue extends Global {
     public int word, size;
@@ -17,6 +14,10 @@ public class GlobalValue extends Global {
             word = ((IRBoolConst) gVar.initVal).val ? 1 : 0;
             size = 8;
         }
+        if (gVar.initVal instanceof IRStringConst) {
+            word = ((IRStringConst) gVar.initVal).id;
+            size = -1;
+        }
         if (gVar.initVal instanceof IRNullConst) {
             word = 0;
             size = 32;
@@ -27,8 +28,13 @@ public class GlobalValue extends Global {
     public String toString() {
         String ret = "";
         ret += name + ":\n";
-        ret += size == 32 ? "   .word  " : "    .byte  ";
-        ret += word + "\n\n";
+        if (size == -1) {
+            ret += "    .word   str." + word + "\n\n";
+        }
+        else {
+            ret += size == 32 ? "   .word  " : "    .byte  ";
+            ret += word + "\n\n";
+        }
         return ret;
     }
 }

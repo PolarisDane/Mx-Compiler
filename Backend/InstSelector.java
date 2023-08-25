@@ -121,11 +121,11 @@ public class InstSelector implements IRVisitor {
         ASMBlock first = inFunc.blocks.get(0);
         ASMBlock last = inFunc.blocks.get(inFunc.blocks.size() - 1);
         first.insts.addFirst(new ASMStoreInst(32, new PhyReg("sp"), new PhyReg("ra"), new Imm(inFunc.argsStack)));
-        first.insts.addFirst(new ASMRTypeInst(new PhyReg("sp"), new PhyReg("sp"), new PhyReg("t0"), "add"));
-        first.insts.addFirst(new ASMLiInst(new PhyReg("t0"), new Imm(-inFunc.stackLength)));
+        first.insts.addFirst(new ASMRTypeInst(new PhyReg("sp"), new PhyReg("sp"), new PhyReg("t3"), "add"));
+        first.insts.addFirst(new ASMLiInst(new PhyReg("t3"), new Imm(-inFunc.stackLength)));
         last.insts.add(new ASMLoadInst(32, new PhyReg("ra"), new PhyReg("sp"), new Imm(inFunc.argsStack)));
-        last.insts.add(new ASMLiInst(new PhyReg("t0"), new Imm(inFunc.stackLength)));
-        last.insts.add(new ASMRTypeInst(new PhyReg("sp"), new PhyReg("sp"), new PhyReg("t0"), "add"));
+        last.insts.add(new ASMLiInst(new PhyReg("t3"), new Imm(inFunc.stackLength)));
+        last.insts.add(new ASMRTypeInst(new PhyReg("sp"), new PhyReg("sp"), new PhyReg("t3"), "add"));
         inFunc.blocks.get(inFunc.blocks.size() - 1).insts.add(new ASMRetInst());
     }
 

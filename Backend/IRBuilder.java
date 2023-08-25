@@ -290,7 +290,8 @@ public class IRBuilder implements ASTVisitor {
         }
         if (funcInClass) {
             if (inFunc != null && inFunc.thisPtr != null && it.thisPtr == null) {
-                it.thisPtr = inFunc.params.get(0);
+                it.thisPtr = new IRRegister("this", inFunc.thisPtr.type);
+                curBlock.addInst(new IRLoad(curBlock, inFunc.thisPtr.type, it.thisPtr, inFunc.thisPtr));
             }
             callInst.args.add(it.thisPtr);
         }

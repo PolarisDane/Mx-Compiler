@@ -18,6 +18,7 @@ public class RegAllocator {
     PhyReg Regt0 = new PhyReg("t0");
     PhyReg Regt1 = new PhyReg("t1");
     PhyReg Regt2 = new PhyReg("t2");
+    PhyReg Regt3 = new PhyReg("t3");
     PhyReg Regsp = new PhyReg("sp");
     LinkedList<ASMBaseInst> insts;
     public RegAllocator(ASMProgram program) {
@@ -67,14 +68,14 @@ public class RegAllocator {
         }
         else {
             if (isSrc) {
-                insts.add(new ASMLiInst(Regt0, new Imm(offset)));
-                insts.add(new ASMRTypeInst(Regt0, Regt0, Regsp, "add"));
-                insts.add(new ASMLoadInst(32, phyReg, Regt0));
+                insts.add(new ASMLiInst(Regt3, new Imm(offset)));
+                insts.add(new ASMRTypeInst(Regt3, Regt3, Regsp, "add"));
+                insts.add(new ASMLoadInst(32, phyReg, Regt3));
             }
             else {
-                insts.add(new ASMLiInst(Regt0, new Imm(offset)));
-                insts.add(new ASMRTypeInst(Regt0, Regt0, Regsp, "add"));
-                insts.add(new ASMStoreInst(32, Regt0, phyReg));
+                insts.add(new ASMLiInst(Regt3, new Imm(offset)));
+                insts.add(new ASMRTypeInst(Regt3, Regt3, Regsp, "add"));
+                insts.add(new ASMStoreInst(32, Regt3, phyReg));
             }
         }
     }

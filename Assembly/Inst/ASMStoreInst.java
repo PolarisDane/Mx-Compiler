@@ -21,6 +21,11 @@ public class ASMStoreInst extends ASMBaseInst {
     }
     @Override
     public String toString() {
-        return "sw " + rs2.toString() + ", " + offset.toString() + "(" + rs1.toString() + ")";
+        if (size ==32) {
+            return "sw " + rs2.toString() + ", " + offset.toString() + "(" + rs1.toString() + ")";
+        }
+        else {
+            return "sb " + rs2.toString() + ", " + offset.toString() + "(" + rs1.toString() + ")";
+        }
     }
 }
