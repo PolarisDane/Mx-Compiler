@@ -4,6 +4,7 @@ import Backend.IRVisitor;
 import MIR.Inst.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 public class BasicBlock {
@@ -16,17 +17,26 @@ public class BasicBlock {
 
     public static int cnt = 0;
 
+    public static HashMap<String, BasicBlock> blockMap = new HashMap<>();
+
     public int id;
+    public BasicBlock IDom = null;
+
+    public ArrayList<BasicBlock> pred = new ArrayList<>();
+    public ArrayList<BasicBlock> succ = new ArrayList<>();
+    public ArrayList<BasicBlock> dom = new ArrayList<>();
 
     public BasicBlock(String label, Function inFunc) {
         id = cnt++;
         this.label = label + id;
         this.inFunc = inFunc;
+        blockMap.put(this.label, this);
     }
 
     public BasicBlock(String label, Function inFunc, boolean no_id) {
         this.label = label;
         this.inFunc = inFunc;
+        blockMap.put(this.label, this);
     }
 
     public void addInst(IRBaseInst inst) {

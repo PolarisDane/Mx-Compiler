@@ -15,6 +15,7 @@ public class Program {
     public HashMap<String, IRStructType> IRclassMap = new HashMap<>();
     public HashMap<String, IRStringConst> IRstringMap = new HashMap<>();
     public ArrayList<IRFuncDeclare> IRBuiltinFunc = new ArrayList<>();
+//    public HashMap<String, BasicBlock> blockMap = new HashMap<>();
 
     public Program() {}
 
