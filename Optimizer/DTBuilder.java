@@ -10,7 +10,6 @@ public class DTBuilder {
     Program program;
 
     HashMap<BasicBlock, Integer> blockOrder = new HashMap<>();
-    Stack<BasicBlock> blockStack = new Stack<>();
     HashMap<BasicBlock, Boolean> visit = new HashMap<>();
     LinkedList<BasicBlock> RPO = new LinkedList<>();
 
@@ -24,22 +23,32 @@ public class DTBuilder {
         }
     }
 
-    public void getRPO(BasicBlock it) {
+
+
+    public void getRPO(Function it) {
+        blockOrder.clear();
+        visit.clear();
+        RPO.clear();
+        dfs(it.blocks.get(0));
+        for (int i = 0; i < RPO.size(); i++) {
+            blockOrder.put(RPO.get(i), i);
+        }
+        RPO.removeFirst();
+        it.blocks.get(0).IDom = it.blocks.get(0);
+    }
+
+    public void dfs(BasicBlock it) {
         visit.put(it, true);
         for (var succ: it.succ) {
             if (!visit.containsKey(succ)) {
-                getRPO(succ);
+                dfs(succ);
             }
         }
-        blockStack.push(it);
         RPO.addFirst(it);
     }
 
     public void visitFunc(Function it) {
-        RPO.clear();
-        blockStack.clear();
-        visit.clear();
-        getRPO(it.blocks.get(0));
+        getRPO(it);
         boolean changed = true;
         while (changed) {
             changed = false;
@@ -59,19 +68,31 @@ public class DTBuilder {
                 }
             }
         }//we find the set of dom by finding its IDom (which takes the form of a tree), by adding all its ancestors we get the complete dom set
-        for (var nxt: RPO) {
-            for (var pred: nxt.pred) {
 
+        for (var nxt: RPO) {
+            nxt.IDom.DTChild.add(nxt);
+        }//construct DT according to IDom
+
+        for (var nxt: RPO) {
+            if (nxt.pred.size() < 2) {
+                continue;
+            }
+            for (var pred: nxt.pred) {
+                var runner = pred;
+                while (runner != nxt.IDom) {
+                    runner.DomFrontier.add(nxt);
+                    runner = runner.IDom;
+                }
             }
         }
     }
 
     public BasicBlock calcIntersect(BasicBlock b1, BasicBlock b2) {
         while (b1 != b2) {
-            while (blockOrder.get(b1.IDom) < blockOrder.get(b2.IDom)) {
+            while (blockOrder.get(b1.IDom) > blockOrder.get(b2.IDom)) {
                 b1 = b1.IDom;
             }
-            while (blockOrder.get(b1.IDom) > blockOrder.get(b2.IDom)) {
+            while (blockOrder.get(b1.IDom) < blockOrder.get(b2.IDom)) {
                 b2 = b2.IDom;
             }
         }

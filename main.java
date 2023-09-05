@@ -35,7 +35,6 @@ public class main {
             ASTRoot = (RootNode) astBuilder.visit(parserTreeRoot);
             new SymbolCollector(gScope).visit(ASTRoot);
             new SemanticChecker(gScope).visit(ASTRoot);
-//            System.out.println("IR start-----------");
             IRBuilder irBuilder = new IRBuilder(gScope);
             irBuilder.visit(ASTRoot);
             InstSelector instSelector = new InstSelector();

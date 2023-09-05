@@ -24,7 +24,8 @@ public class BasicBlock {
 
     public ArrayList<BasicBlock> pred = new ArrayList<>();
     public ArrayList<BasicBlock> succ = new ArrayList<>();
-    public ArrayList<BasicBlock> dom = new ArrayList<>();
+    public ArrayList<BasicBlock> DomFrontier = new ArrayList<>();
+    public ArrayList<BasicBlock> DTChild = new ArrayList<>();
 
     public BasicBlock(String label, Function inFunc) {
         id = cnt++;
