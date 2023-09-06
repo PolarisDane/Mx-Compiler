@@ -41,6 +41,9 @@ public class BasicBlock {
     }
 
     public void addInst(IRBaseInst inst) {
+        if (inst instanceof IRPhi) {
+            insts.addFirst(inst);
+        }
         if (terminal) {
             return;
         }

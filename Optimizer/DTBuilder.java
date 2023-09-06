@@ -89,10 +89,10 @@ public class DTBuilder {
 
     public BasicBlock calcIntersect(BasicBlock b1, BasicBlock b2) {
         while (b1 != b2) {
-            while (blockOrder.get(b1.IDom) > blockOrder.get(b2.IDom)) {
+            while (blockOrder.get(b1) > blockOrder.get(b2)) {
                 b1 = b1.IDom;
             }
-            while (blockOrder.get(b1.IDom) < blockOrder.get(b2.IDom)) {
+            while (blockOrder.get(b1) < blockOrder.get(b2)) {
                 b2 = b2.IDom;
             }
         }
