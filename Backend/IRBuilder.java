@@ -958,6 +958,9 @@ public class IRBuilder implements ASTVisitor {
         }
         if (!it.type.equals(builtin.VoidType)) {
             inFunc.retReg = new IRRegister("retVal", new IRPtrType(getIRType(it.type)));
+            if (inFunc.funcName.equals("main")) {
+                curBlock.addInst(new IRStore(curBlock, inFunc.retReg, new IRIntConst(0)));
+            }
             curBlock.addInst(new IRAlloca(curBlock, getIRType(it.type), inFunc.retReg));
         }
         if (it.funcName.equals("main") && global_init) {

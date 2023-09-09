@@ -11,12 +11,14 @@ import java.util.ArrayList;
 public class IRPhi extends IRBaseInst {
     public IRRegister res;
     public IRBaseType type;
+    public IRRegister addr;
     public ArrayList<BasicBlock> fromBlock = new ArrayList<>();
     public ArrayList<Entity> val = new ArrayList<>();
 
-    public IRPhi(BasicBlock parentBlock, IRRegister res, IRBaseType type) {
+    public IRPhi(BasicBlock parentBlock, IRRegister res, IRRegister addr, IRBaseType type) {
         super(parentBlock);
         this.res = res;
+        this.addr = addr;
         this.type = type;
     }
 
@@ -24,7 +26,7 @@ public class IRPhi extends IRBaseInst {
     public String toString() {
         String ret = res.toString() + " = phi " + type.toString() + " ";
         for (int i = 0; i < fromBlock.size(); i++) {
-            ret += "[ " + val.get(i).toString() + ", " + fromBlock.get(i).toString() + " ]";
+            ret += "[ " + val.get(i).toString() + ", %" + fromBlock.get(i).label + " ]";
             if (i != fromBlock.size() - 1) {
                 ret += ", ";
             }

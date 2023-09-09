@@ -26,6 +26,7 @@ public class BasicBlock {
     public ArrayList<BasicBlock> succ = new ArrayList<>();
     public ArrayList<BasicBlock> DomFrontier = new ArrayList<>();
     public ArrayList<BasicBlock> DTChild = new ArrayList<>();
+    public ArrayList<IRPhi> phiInst = new ArrayList<>();
 
     public BasicBlock(String label, Function inFunc) {
         id = cnt++;
@@ -42,7 +43,7 @@ public class BasicBlock {
 
     public void addInst(IRBaseInst inst) {
         if (inst instanceof IRPhi) {
-            insts.addFirst(inst);
+            phiInst.add((IRPhi) inst);
         }
         if (terminal) {
             return;
@@ -59,6 +60,9 @@ public class BasicBlock {
 
     public String toString() {
         String ret = label + ":\n";
+        for (var phi: phiInst) {
+            ret = ret + phi + "\n";
+        }
         for (var inst: insts) {
             ret = ret + inst + "\n";
         }
