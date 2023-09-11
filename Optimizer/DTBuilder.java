@@ -55,11 +55,13 @@ public class DTBuilder {
             for (var nxt: RPO) {
                 BasicBlock newIDom = null;
                 for (var pred: nxt.pred) {
-                    if (newIDom == null) {
+                    if (newIDom == null && pred.IDom != null) {
                         newIDom = pred;
                     }
-                    else if (pred.IDom != null) {
-                        newIDom = calcIntersect(newIDom, pred.IDom);
+                }
+                for (var pred: nxt.pred) {
+                    if (pred.IDom != null) {
+                        newIDom = calcIntersect(newIDom, pred);
                     }
                 }
                 if (newIDom != nxt.IDom) {

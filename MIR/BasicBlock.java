@@ -17,8 +17,6 @@ public class BasicBlock {
 
     public static int cnt = 0;
 
-    public static HashMap<String, BasicBlock> blockMap = new HashMap<>();
-
     public int id;
     public BasicBlock IDom = null;
 
@@ -32,18 +30,19 @@ public class BasicBlock {
         id = cnt++;
         this.label = label + id;
         this.inFunc = inFunc;
-        blockMap.put(this.label, this);
+        inFunc.blockMap.put(this.label, this);
     }
 
     public BasicBlock(String label, Function inFunc, boolean no_id) {
         this.label = label;
         this.inFunc = inFunc;
-        blockMap.put(this.label, this);
+        inFunc.blockMap.put(this.label, this);
     }
 
     public void addInst(IRBaseInst inst) {
         if (inst instanceof IRPhi) {
             phiInst.add((IRPhi) inst);
+            return;
         }
         if (terminal) {
             return;

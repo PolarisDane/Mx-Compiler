@@ -16,6 +16,7 @@ public class Mem2Reg {
     ArrayList<BasicBlock> def = new ArrayList<>();
     ArrayList<BasicBlock> use = new ArrayList<>();
     HashMap<IRRegister, Entity> replacement = new HashMap<>();
+    HashMap<IRRegister, Boolean> promotable = new HashMap<>();
     public Mem2Reg(Program program) {
         this.program = program;
     }
@@ -29,6 +30,10 @@ public class Mem2Reg {
         }
     }
 
+//    public boolean isPromotable() {
+//
+//    }
+
     public Entity finalReplace(IRRegister reg) {
         Entity res = reg;
         while (replacement.containsKey(reg)) {
@@ -40,10 +45,6 @@ public class Mem2Reg {
         }//path compact not implemented yet
         return res;
     }
-
-//    public boolean isPromotable(IRAlloca it) {
-//
-//    }
 
     public void promoteAlloca(IRAlloca it) {
         use.clear();
@@ -58,6 +59,7 @@ public class Mem2Reg {
                 }
             }
         }
+        promotable.put(it.res, true);
         if (use.isEmpty()) {
 
         }//can be discarded
@@ -91,11 +93,11 @@ public class Mem2Reg {
             if (inst instanceof IRAlloca) {
                 continue;
             }
-            if (inst instanceof IRLoad ld && (!(ld.addr instanceof IRGlobalVar))) {
+            if (inst instanceof IRLoad ld && promotable.containsKey(ld.addr)) {
                 replacement.put(ld.reg, finalReplace((IRRegister) ld.addr));
                 continue;
             }
-            else if (inst instanceof IRStore st && (!(st.reg instanceof IRGlobalVar))) {
+            else if (inst instanceof IRStore st && promotable.containsKey(st.reg)) {
                 if (st.val instanceof IRConst) {
                     replacement.put(st.reg, st.val);
                 }
@@ -126,6 +128,11 @@ public class Mem2Reg {
     }
 
     public void replace(IRBaseInst inst) {
+        if (inst instanceof IRStore st) {
+            if (st.val instanceof IRRegister reg && replacement.containsKey(reg)) {
+                st.val = replacement.get(reg);
+            }
+        }
         if (inst instanceof IRBinaryOp binary) {
             if (binary.op1 instanceof IRRegister reg1 && replacement.containsKey(reg1)) {
                 binary.op1 = replacement.get(reg1);
@@ -148,7 +155,7 @@ public class Mem2Reg {
             }
         }
         if (inst instanceof IRGetElementPtr getPtr) {
-            if (getPtr.ptr instanceof IRRegister reg) {
+            if (getPtr.ptr instanceof IRRegister reg && replacement.containsKey(reg)) {
                 getPtr.ptr = replacement.get(reg);
             }
             for (int i = 0; i < getPtr.idx.size(); i++) {

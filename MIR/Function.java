@@ -6,7 +6,9 @@ import MIR.Inst.IRAlloca;
 import MIR.Type.IRBaseType;
 import MIR.Type.IRPtrType;
 
+import javax.naming.ldap.HasControls;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 public class Function {
@@ -17,6 +19,7 @@ public class Function {
     public ArrayList<IRRegister> params = new ArrayList<>();
     public IRRegister retReg;
     public IRRegister thisPtr;
+    public HashMap<String, BasicBlock> blockMap = new HashMap<>();
 
     public Function(String funcName, IRBaseType type) {
         this.funcName = funcName;

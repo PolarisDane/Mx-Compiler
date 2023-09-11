@@ -7,6 +7,8 @@ import MIR.Inst.IRBranch;
 import MIR.Inst.IRJump;
 import MIR.Program;
 
+import java.util.LinkedList;
+
 public class CFGBuilder {
     Program program;
 
@@ -24,7 +26,7 @@ public class CFGBuilder {
         for (var nxt: it.blocks) {
             IRBaseInst inst = nxt.insts.get(nxt.insts.size() - 1);
             if (inst instanceof IRJump) {
-                BasicBlock jumpBlock = BasicBlock.blockMap.get(((IRJump) inst).label);
+                BasicBlock jumpBlock = it.blockMap.get(((IRJump) inst).label);
                 nxt.succ.add(jumpBlock);
                 jumpBlock.pred.add(nxt);
             }
@@ -37,6 +39,19 @@ public class CFGBuilder {
                 falseBlock.pred.add(nxt);
             }
         }
+
+        LinkedList<BasicBlock> blocks = new LinkedList<>();
+        for (var block: it.blocks) {
+            if (!block.pred.isEmpty() || block == it.blocks.get(0)) {
+                blocks.add(block);
+            }
+            else {
+                for (var nxt: block.succ) {
+                    nxt.pred.remove(block);
+                }
+            }
+        }
+        it.blocks = blocks;
     }
 
 }
