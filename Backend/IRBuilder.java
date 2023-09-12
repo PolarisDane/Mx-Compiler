@@ -837,7 +837,7 @@ public class IRBuilder implements ASTVisitor {
     public void visit(ReturnStmtNode it) {
         if (it.returnVal != null) {
             it.returnVal.accept(this);
-            curBlock.addInst(new IRStore(curBlock, inFunc.retReg, getVal(it.returnVal, true)));
+            curBlock.addInst(new IRStore(curBlock, inFunc.retReg, getVal(it.returnVal, false)));
         }
         curBlock.addInst(new IRJump(curBlock, "return"));
         curBlock.returned = true;
@@ -867,8 +867,8 @@ public class IRBuilder implements ASTVisitor {
         boolean inClass = curScope.inClass != null;
         for (int i = 0; i < inFunc.params.size(); i++) {
             IRRegister reg = inFunc.params.get(i);
-            IRRegister addr = new IRRegister(reg.name + ".addr", new IRPtrType(reg.type));
-            curBlock.addInst(new IRAlloca(curBlock, new IRPtrType(reg.type), addr));
+            IRRegister addr = new IRRegister(reg.name, new IRPtrType(reg.type));
+            curBlock.addInst(new IRAlloca(curBlock, reg.type, addr));
             curBlock.addInst(new IRStore(curBlock, addr, reg));
             if (inClass && i == 0) {
                 inFunc.thisPtr = addr;

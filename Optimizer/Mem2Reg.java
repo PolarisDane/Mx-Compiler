@@ -5,6 +5,7 @@ import MIR.Entity.*;
 import MIR.Function;
 import MIR.Inst.*;
 import MIR.Program;
+import MIR.Type.IRPtrType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -59,10 +60,10 @@ public class Mem2Reg {
                 }
             }
         }
-        promotable.put(it.res, true);
         if (use.isEmpty()) {
 
         }//can be discarded
+        promotable.put(it.res, true);
         //judge promotable maybe?
         LinkedList<BasicBlock> que = new LinkedList<>(def);
         HashMap<BasicBlock, Boolean> addPhi = new HashMap<>();
@@ -117,7 +118,12 @@ public class Mem2Reg {
                     phi.val.add(replacement.get(phi.addr));
                 }
                 else {
-                    phi.val.add(new IRIntConst(0));
+                    if (phi.type instanceof IRPtrType) {
+                        phi.val.add(new IRNullConst());
+                    }
+                    else {
+                        phi.val.add(new IRIntConst(0));
+                    }
                 }
             }
         }
