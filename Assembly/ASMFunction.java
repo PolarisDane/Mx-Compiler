@@ -16,14 +16,18 @@ public class ASMFunction {
 
     public String name;
     public ArrayList<ASMBlock> blocks = new ArrayList<>();
-    public ASMBlock rootBlock = null;
-    public ArrayList<PhyReg> phyRegs = new ArrayList<>();
     public int stackLength = 0;
     public int stackStart = 0;
     public int argsStack = 0;
 
     public ASMFunction(String name) {
         this.name = name;
+    }
+
+    public void work() {
+        for (var nxt: blocks) {
+            nxt.work();
+        }
     }
 
     public String toString() {

@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 public class InstSelector implements IRVisitor {
-    public HashMap<IRRegister, VirtualReg> regMap = new HashMap<>();
     public ASMBlock curBlock;
     public ASMFunction inFunc;
     public HashMap<String, ASMBlock> blockMap = new HashMap<>();
@@ -84,6 +83,7 @@ public class InstSelector implements IRVisitor {
             program.functions.add(inFunc);
             nxt.accept(this);
         }
+        program.work();
 //        System.out.println(program.toString());
     }
 
@@ -100,12 +100,7 @@ public class InstSelector implements IRVisitor {
             }
         }
         for (int i = 0; i < it.params.size(); i++) {
-            if (i < 8) {
-                it.params.get(i).ASMReg = new PhyReg("a" + i);
-            }
-            else {
-                it.params.get(i).ASMReg = new VirtualReg(32);
-            }
+            it.params.get(i).ASMReg = new VirtualReg(32);
         }
         inFunc.argsStack = Integer.max(maxArgsCnt - 8, 0) * 4;
         inFunc.stackStart = inFunc.argsStack + 4;
@@ -113,6 +108,9 @@ public class InstSelector implements IRVisitor {
             curBlock = blockMap.get(nxt.label);
             inFunc.blocks.add(curBlock);
             nxt.accept(this);
+        }
+        for (int i = 0; i < it.params.size() && i < 8; i++) {
+            inFunc.blocks.get(0).insts.addFirst(new ASMMvInst(it.params.get(i).ASMReg, new PhyReg("a" + i)));
         }
         inFunc.stackLength = inFunc.stackStart + VirtualReg.cnt * 4;
         if (inFunc.stackLength % 16 != 0) {
@@ -131,6 +129,9 @@ public class InstSelector implements IRVisitor {
 
     @Override
     public void visit(BasicBlock it) {
+        for (var nxt: it.phiInst) {
+            nxt.accept(this);
+        }
         for (var nxt: it.insts) {
             nxt.accept(this);
         }
@@ -144,8 +145,8 @@ public class InstSelector implements IRVisitor {
 
     @Override
     public void visit(IRBranch it) {
-        curBlock.insts.add(new ASMBeqInst(getReg(it.condition), blockMap.get(it.falseThenWork.label)));
-        curBlock.insts.add(new ASMJumpInst(blockMap.get(it.trueThenWork.label)));
+        curBlock.flowInsts.add(new ASMBeqInst(getReg(it.condition), blockMap.get(it.falseThenWork.label)));
+        curBlock.flowInsts.add(new ASMJumpInst(blockMap.get(it.trueThenWork.label)));
     }
 
     @Override
@@ -240,7 +241,7 @@ public class InstSelector implements IRVisitor {
 
     @Override
     public void visit(IRJump it) {
-        curBlock.insts.add(new ASMJumpInst(blockMap.get(it.label)));
+        curBlock.flowInsts.add(new ASMJumpInst(blockMap.get(it.label)));
     }
 
     @Override
@@ -250,6 +251,22 @@ public class InstSelector implements IRVisitor {
 
     @Override
     public void visit(IRPhi it) {
+        ASMBlock tmp = curBlock;
+        for (int i = 0; i < it.val.size(); i++) {
+            Entity val = it.val.get(i);
+            if (val instanceof IRConst) {
+                if (val instanceof IRStringConst) {
+                    VirtualReg vReg = new VirtualReg(32);
+                    blockMap.get(it.fromBlock.get(i).label).phiRemoval.add(new ASMLaInst(vReg, ((Global) val.ASMReg).name));
+                    blockMap.get(it.fromBlock.get(i).label).phiRemoval.add(new ASMMvInst(getReg(it.res), vReg));
+                } else {
+                    blockMap.get(it.fromBlock.get(i).label).phiRemoval.add(new ASMLiInst(getReg(it.res), new Imm(val)));
+                }
+            }
+            else {
+                blockMap.get(it.fromBlock.get(i).label).phiRemoval.add(new ASMMvInst(getReg(it.res), getReg(val)));
+            }
+        }
         //not used, maybe later
     }
 

@@ -12,6 +12,12 @@ public class ASMProgram {
 
     public ASMProgram() {}
 
+    public void work() {
+        for (var nxt: functions) {
+            nxt.work();
+        }
+    }
+
     public String toString() {
         String ret = "";
         if (!gValues.isEmpty()) {
