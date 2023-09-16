@@ -406,6 +406,19 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(SingleExprNode it) {
         it.obj.accept(this);
+        if (it.obj.isConst) {
+            if (it.op.equals("-")) {
+                it.entity = new IRIntConst(-((IRIntConst) it.obj.entity).val);
+            }
+            else if (it.op.equals("!")) {
+                it.entity = new IRBoolConst(!((IRBoolConst) it.obj.entity).val);
+            }
+            else if (it.op.equals("~")) {
+                it.entity = new IRIntConst(~((IRIntConst) it.obj.entity).val);
+            }
+            it.isConst = true;
+            return;
+        }
         if (it.op.equals("+")) {
             //nothing here
         }
@@ -433,6 +446,33 @@ public class IRBuilder implements ASTVisitor {
             String op = null;
             it.rop.accept(this);
             if (it.lop.type.equals(builtin.StringType) || it.rop.type.equals(builtin.StringType)) {
+                if (it.lop.isConst && it.rop.isConst) {
+                    switch(it.op) {
+                        case "+":
+                            it.entity = program.addString(((IRStringConst) it.lop.entity).val + ((IRStringConst) it.rop.entity).val);
+                            break;
+                        case "==":
+                            it.entity = new IRBoolConst(((IRStringConst) it.lop.entity).val.equals(((IRStringConst) it.rop.entity).val));
+                            break;
+                        case "!=":
+                            it.entity = new IRBoolConst(!((IRStringConst) it.lop.entity).val.equals(((IRStringConst) it.rop.entity).val));
+                            break;
+                        case "<":
+                            it.entity = new IRBoolConst(((IRStringConst) it.lop.entity).val.compareTo(((IRStringConst) it.rop.entity).val) < 0);
+                            break;
+                        case ">":
+                            it.entity = new IRBoolConst(((IRStringConst) it.lop.entity).val.compareTo(((IRStringConst) it.rop.entity).val) > 0);
+                            break;
+                        case "<=":
+                            it.entity = new IRBoolConst(((IRStringConst) it.lop.entity).val.compareTo(((IRStringConst) it.rop.entity).val) <= 0);
+                            break;
+                        case ">=":
+                            it.entity = new IRBoolConst(((IRStringConst) it.lop.entity).val.compareTo(((IRStringConst) it.rop.entity).val) >= 0);
+                            break;
+                    }
+                    it.isConst = true;
+                    return;
+                }
                 IRRegister res = null;
                 IRCall callInst;
                 switch(it.op) {
@@ -498,6 +538,60 @@ public class IRBuilder implements ASTVisitor {
                         curBlock.addInst(new IRTrunc(curBlock, (IRRegister) it.entity, new IRIntType(8), res, new IRIntType(1)));
                         break;
                 }
+                return;
+            }
+            if (it.lop.isConst && it.rop.isConst) {
+                switch(it.op) {
+                    case "+":
+                        it.entity = new IRIntConst(((IRIntConst) it.lop.entity).val + ((IRIntConst) it.rop.entity).val);
+                        break;
+                    case "-":
+                        it.entity = new IRIntConst(((IRIntConst) it.lop.entity).val - ((IRIntConst) it.rop.entity).val);
+                        break;
+                    case "*":
+                        it.entity = new IRIntConst(((IRIntConst) it.lop.entity).val * ((IRIntConst) it.rop.entity).val);
+                        break;
+                    case "/":
+                        it.entity = new IRIntConst(((IRIntConst) it.lop.entity).val / ((IRIntConst) it.rop.entity).val);
+                        break;
+                    case "%":
+                        it.entity = new IRIntConst(((IRIntConst) it.lop.entity).val % ((IRIntConst) it.rop.entity).val);
+                        break;
+                    case "&":
+                        it.entity = new IRIntConst(((IRIntConst) it.lop.entity).val & ((IRIntConst) it.rop.entity).val);
+                        break;
+                    case "|":
+                        it.entity = new IRIntConst(((IRIntConst) it.lop.entity).val | ((IRIntConst) it.rop.entity).val);
+                        break;
+                    case "<<":
+                        it.entity = new IRIntConst(((IRIntConst) it.lop.entity).val << ((IRIntConst) it.rop.entity).val);
+                        break;
+                    case ">>":
+                        it.entity = new IRIntConst(((IRIntConst) it.lop.entity).val >> ((IRIntConst) it.rop.entity).val);
+                        break;
+                    case "^":
+                        it.entity = new IRIntConst(((IRIntConst) it.lop.entity).val ^ ((IRIntConst) it.rop.entity).val);
+                        break;
+                    case ">=":
+                        it.entity = new IRBoolConst(((IRIntConst) it.lop.entity).val >= ((IRIntConst) it.rop.entity).val);
+                        break;
+                    case "<=":
+                        it.entity = new IRBoolConst(((IRIntConst) it.lop.entity).val <= ((IRIntConst) it.rop.entity).val);
+                        break;
+                    case ">":
+                        it.entity = new IRBoolConst(((IRIntConst) it.lop.entity).val > ((IRIntConst) it.rop.entity).val);
+                        break;
+                    case "<":
+                        it.entity = new IRBoolConst(((IRIntConst) it.lop.entity).val < ((IRIntConst) it.rop.entity).val);
+                        break;
+                    case "==":
+                        it.entity = new IRBoolConst(((IRIntConst) it.lop.entity).val == ((IRIntConst) it.rop.entity).val);
+                        break;
+                    case "!=":
+                        it.entity = new IRBoolConst(((IRIntConst) it.lop.entity).val != ((IRIntConst) it.rop.entity).val);
+                        break;
+                }
+                it.isConst = true;
                 return;
             }
             boolean flag = false;
@@ -573,6 +667,35 @@ public class IRBuilder implements ASTVisitor {
             }
         }//non short-circuit value
         else {
+            if (it.lop.isConst) {
+                if (it.op.equals("&&")) {
+                    if (((IRBoolConst) it.lop.entity).val) {
+                        it.rop.accept(this);
+                        it.entity = it.rop.entity;
+                        if (it.rop.isConst) {
+                            it.isConst = true;
+                        }
+                    }
+                    else {
+                        it.entity = new IRBoolConst(false);
+                        it.isConst = true;
+                    }
+                }
+                else if (it.op.equals("||")) {
+                    if (!((IRBoolConst) it.lop.entity).val) {
+                        it.rop.accept(this);
+                        it.entity = it.rop.entity;
+                        if (it.rop.isConst) {
+                            it.isConst = true;
+                        }
+                    }
+                    else {
+                        it.entity = new IRBoolConst(true);
+                        it.isConst = true;
+                    }
+                }
+                return;
+            }
             IRRegister res = new IRRegister("binary_op", new IRPtrType(new IRIntType(8), 0));
             curBlock.addInst(new IRAlloca(curBlock, new IRIntType(8), res));
             BasicBlock rightBranch = new BasicBlock("binary_op.rhs", inFunc);
@@ -618,6 +741,23 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(TernaryExprNode it) {
         it.condition.accept(this);
+        if (it.condition.isConst) {
+            if (((IRBoolConst) it.condition.entity).val) {
+                it.trueVal.accept(this);
+                it.entity = it.trueVal.entity;
+                if (it.trueVal.isConst) {
+                    it.isConst = true;
+                }
+            }
+            else {
+                it.falseVal.accept(this);
+                it.entity = it.falseVal.entity;
+                if (it.falseVal.isConst) {
+                    it.isConst = true;
+                }
+            }
+            return;
+        }
         BasicBlock prev = curBlock;
         BasicBlock trueBranch = new BasicBlock("ternary.then", inFunc);
         BasicBlock falseBranch = new BasicBlock("ternary.else", inFunc);
@@ -678,10 +818,12 @@ public class IRBuilder implements ASTVisitor {
             if (it.type.equals(builtin.IntType)) {
                 int val = Integer.parseInt(it.content);
                 it.entity = new IRIntConst(val);
+                it.isConst = true;
             }
             else if (it.type.equals(builtin.BoolType)) {
                 boolean val = it.content.equals("true") ? true : false;
                 it.entity = new IRBoolConst(val);
+                it.isConst = true;
             }
             else if (it.type.equals(builtin.NullType)) {
                 it.entity = new IRNullConst();
@@ -691,6 +833,7 @@ public class IRBuilder implements ASTVisitor {
                     program.IRstringMap.put(it.content, new IRStringConst(it.content));
                 }
                 it.entity = program.IRstringMap.get(it.content);
+                it.isConst = true;
             }
             else if (it.content.equals("this")) {
                 it.addr = inFunc.thisPtr;

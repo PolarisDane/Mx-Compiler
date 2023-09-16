@@ -40,11 +40,11 @@ public class main {
             irBuilder.visit(ASTRoot);
 //            System.out.println(irBuilder.program.toString());
             new Mem2Reg(irBuilder.program).optimize();
-//            System.out.println(irBuilder.program.toString());
-            InstSelector instSelector = new InstSelector();
-            instSelector.visit(irBuilder.program);
-            RegAllocator regAllocator = new RegAllocator(instSelector.program);
-            regAllocator.work();
+            System.out.println(irBuilder.program.toString());
+//            InstSelector instSelector = new InstSelector();
+//            instSelector.visit(irBuilder.program);
+//            RegAllocator regAllocator = new RegAllocator(instSelector.program);
+//            regAllocator.work();
         } catch (error err) {
             System.err.println(err.toString());
             throw new RuntimeException();

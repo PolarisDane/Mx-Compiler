@@ -23,8 +23,11 @@ public class Program {
         return str.replace("\\", "\\\\").replace("\n", "\\0A").replace("\"","\\22");
     }
 
-    public void setGlobalVar(ArrayList<IRGlobalVar> globalVar) {
-        this.globalVar = globalVar;
+    public Entity addString(String str) {
+        if (!IRstringMap.containsKey(str)) {
+            IRstringMap.put(str, new IRStringConst(str));
+        }
+        return IRstringMap.get(str);
     }
 
     public void work() {

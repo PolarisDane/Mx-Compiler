@@ -11,6 +11,7 @@ public abstract class ExprNode extends ASTNode {
     public Entity entity;
 
     public IRRegister addr;
+    public boolean isConst = false;
 
     public Type type = new Type();
 
