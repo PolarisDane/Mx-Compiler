@@ -8,6 +8,7 @@ import MIR.Type.IRBaseType;
 import MIR.Type.IRVoidType;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class IRCall extends IRBaseInst {
     public IRRegister res;
@@ -39,6 +40,22 @@ public class IRCall extends IRBaseInst {
         }
         ret = ret + ")";
         return ret;
+    }
+
+    @Override
+    public HashSet<IRRegister> getUse() {
+        HashSet<IRRegister> use = new HashSet<>();
+        for (var nxt: args) {
+            if (nxt instanceof IRRegister arg) {
+                use.add(arg);
+            }
+        }
+        return use;
+    }
+
+    @Override
+    public IRRegister getDef() {
+        return res;
     }
 
     @Override

@@ -6,6 +6,8 @@ import MIR.Entity.Entity;
 import MIR.Entity.IRRegister;
 import MIR.Type.IRBaseType;
 
+import java.util.HashSet;
+
 public class IRBinaryOp extends IRBaseInst {
     public IRRegister res;
     public String op;
@@ -24,6 +26,23 @@ public class IRBinaryOp extends IRBaseInst {
     @Override
     public String toString() {
         return res + " = " + op + " " + type.toString() + " " + op1.toString() + ", " +op2.toString();
+    }
+
+    @Override
+    public HashSet<IRRegister> getUse() {
+        HashSet<IRRegister> use = new HashSet<>();
+        if (op1 instanceof IRRegister reg1) {
+            use.add(reg1);
+        }
+        if (op2 instanceof IRRegister reg2) {
+            use.add(reg2);
+        }
+        return use;
+    }
+
+    @Override
+    public IRRegister getDef() {
+        return res;
     }
 
     @Override

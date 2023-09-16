@@ -2,6 +2,7 @@ import AST.*;
 import Backend.IRBuilder;
 import Backend.InstSelector;
 import Backend.RegAllocator;
+import Optimizer.IROptimizier;
 import Optimizer.Mem2Reg;
 import Parser.*;
 import Utils.*;
@@ -18,14 +19,14 @@ import java.io.InputStream;
 
 public class main {
     public static void main(String[] args) throws Exception {
-//        String name = "test.txt";
-//        InputStream input = new FileInputStream(name);
-        CharStream input = CharStreams.fromStream(System.in);
+        String name = "test.txt";
+        InputStream input = new FileInputStream(name);
+//        CharStream input = CharStreams.fromStream(System.in);
         try {
             RootNode ASTRoot;
             GlobalScope gScope = new GlobalScope();
-//            MxLexer lexer = new MxLexer(CharStreams.fromStream(input));
-            MxLexer lexer = new MxLexer(input);
+            MxLexer lexer = new MxLexer(CharStreams.fromStream(input));
+//            MxLexer lexer = new MxLexer(input);
             lexer.removeErrorListeners();
             lexer.addErrorListener(new MxErrorListener());
             MxParser parser = new MxParser(new CommonTokenStream(lexer));
@@ -39,12 +40,12 @@ public class main {
             IRBuilder irBuilder = new IRBuilder(gScope);
             irBuilder.visit(ASTRoot);
 //            System.out.println(irBuilder.program.toString());
-            new Mem2Reg(irBuilder.program).optimize();
-//            System.out.println(irBuilder.program.toString());
-            InstSelector instSelector = new InstSelector();
-            instSelector.visit(irBuilder.program);
-            RegAllocator regAllocator = new RegAllocator(instSelector.program);
-            regAllocator.work();
+            new IROptimizier(irBuilder.program).optimize();
+            System.out.println(irBuilder.program.toString());
+//            InstSelector instSelector = new InstSelector();
+//            instSelector.visit(irBuilder.program);
+//            RegAllocator regAllocator = new RegAllocator(instSelector.program);
+//            regAllocator.work();
         } catch (error err) {
             System.err.println(err.toString());
             throw new RuntimeException();

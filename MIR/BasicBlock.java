@@ -57,11 +57,14 @@ public class BasicBlock {
         insts.add(inst);
     }
 
+    public void mergePhi() {
+        for (var phi: phiInst) {
+            insts.addFirst(phi);
+        }
+    }
+
     public String toString() {
         String ret = label + ":\n";
-        for (var phi: phiInst) {
-            ret = ret + phi + "\n";
-        }
         for (var inst: insts) {
             ret = ret + inst + "\n";
         }

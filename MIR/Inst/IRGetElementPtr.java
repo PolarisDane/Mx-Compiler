@@ -7,6 +7,7 @@ import MIR.Entity.IRRegister;
 import MIR.Type.IRBaseType;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class IRGetElementPtr extends IRBaseInst {
     public IRRegister res;
@@ -28,6 +29,25 @@ public class IRGetElementPtr extends IRBaseInst {
             ret += ", " + idx.get(i).type.toString() + " " + idx.get(i).toString();
         }
         return ret;
+    }
+
+    @Override
+    public HashSet<IRRegister> getUse() {
+        HashSet<IRRegister> use = new HashSet<>();
+        if (ptr instanceof IRRegister reg) {
+            use.add(reg);
+        }
+        for (var nxt: idx) {
+            if (nxt instanceof IRRegister reg) {
+                use.add(reg);
+            }
+        }
+        return use;
+    }
+
+    @Override
+    public IRRegister getDef() {
+        return res;
     }
 
     @Override

@@ -68,6 +68,12 @@ public class Program {
         return ret;
     }
 
+    public void mergePhi() {
+        for (var nxt: functions) {
+            nxt.mergePhi();
+        }
+    }
+
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
     }

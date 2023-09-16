@@ -6,6 +6,8 @@ import MIR.Entity.Entity;
 import MIR.Entity.IRRegister;
 import MIR.Type.IRBaseType;
 
+import java.util.HashSet;
+
 public class IRTrunc extends IRBaseInst {
     public IRRegister res;
     public IRBaseType fromType;
@@ -23,6 +25,20 @@ public class IRTrunc extends IRBaseInst {
     @Override
     public String toString() {
         return res.toString() + " = trunc " + fromType.toString() + " " + val.toString() + " to " + toType.toString();
+    }
+
+    @Override
+    public HashSet<IRRegister> getUse() {
+        HashSet<IRRegister> use = new HashSet<>();
+        if (val instanceof IRRegister reg) {
+            use.add(reg);
+        }
+        return use;
+    }
+
+    @Override
+    public IRRegister getDef() {
+        return res;
     }
 
     @Override

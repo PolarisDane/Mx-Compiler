@@ -3,12 +3,14 @@ package MIR;
 import Backend.IRVisitor;
 import MIR.Entity.IRRegister;
 import MIR.Inst.IRAlloca;
+import MIR.Inst.IRBaseInst;
 import MIR.Type.IRBaseType;
 import MIR.Type.IRPtrType;
 
 import javax.naming.ldap.HasControls;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 
 public class Function {
@@ -20,6 +22,8 @@ public class Function {
     public IRRegister retReg;
     public IRRegister thisPtr;
     public HashMap<String, BasicBlock> blockMap = new HashMap<>();
+
+    public HashMap<IRRegister, HashSet<IRBaseInst>> use = new HashMap<>();
 
     public Function(String funcName, IRBaseType type) {
         this.funcName = funcName;
@@ -48,6 +52,12 @@ public class Function {
         }
         ret += "}\n";
         return ret;
+    }
+
+    public void mergePhi() {
+        for (var nxt: blocks) {
+            nxt.mergePhi();
+        }
     }
 
     public void accept(IRVisitor visitor) {

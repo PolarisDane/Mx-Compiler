@@ -7,6 +7,7 @@ import MIR.Entity.IRRegister;
 import MIR.Type.IRBaseType;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class IRPhi extends IRBaseInst {
     public IRRegister res;
@@ -32,6 +33,22 @@ public class IRPhi extends IRBaseInst {
             }
         }
         return ret;
+    }
+
+    @Override
+    public HashSet<IRRegister> getUse() {
+        HashSet<IRRegister> use = new HashSet<>();
+        for (var nxt: val) {
+            if (nxt instanceof IRRegister reg) {
+                use.add(reg);
+            }
+        }
+        return use;
+    }
+
+    @Override
+    public IRRegister getDef() {
+        return res;
     }
 
     @Override

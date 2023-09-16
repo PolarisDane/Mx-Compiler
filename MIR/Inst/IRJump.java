@@ -2,6 +2,9 @@ package MIR.Inst;
 
 import Backend.IRVisitor;
 import MIR.BasicBlock;
+import MIR.Entity.IRRegister;
+
+import java.util.HashSet;
 
 public class IRJump extends IRBaseInst {
     public String label;
@@ -14,6 +17,17 @@ public class IRJump extends IRBaseInst {
     @Override
     public String toString() {
         return "br label %" + label;
+    }
+
+    @Override
+    public HashSet<IRRegister> getUse() {
+        HashSet<IRRegister> use = new HashSet<>();
+        return use;
+    }
+
+    @Override
+    public IRRegister getDef() {
+        return null;
     }
 
     @Override

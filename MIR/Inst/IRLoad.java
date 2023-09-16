@@ -6,6 +6,8 @@ import MIR.Entity.Entity;
 import MIR.Entity.IRRegister;
 import MIR.Type.IRBaseType;
 
+import java.util.HashSet;
+
 public class IRLoad extends IRBaseInst{
     public IRBaseType type;
     public IRRegister reg;
@@ -21,6 +23,20 @@ public class IRLoad extends IRBaseInst{
     @Override
     public String toString() {
         return reg.toString() + " = load " + type.toString() + ", ptr " + addr.toString();
+    }
+
+    @Override
+    public HashSet<IRRegister> getUse() {
+        HashSet<IRRegister> use = new HashSet<>();
+        if (addr instanceof IRRegister reg) {
+            use.add(reg);
+        }
+        return use;
+    }
+
+    @Override
+    public IRRegister getDef() {
+        return reg;
     }
 
     @Override

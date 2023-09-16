@@ -9,6 +9,7 @@ import MIR.Type.IRPtrType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 
 public class Mem2Reg {
@@ -29,6 +30,7 @@ public class Mem2Reg {
             curFunc = nxt;
             visitFunc(nxt);
         }
+        program.mergePhi();
     }
 
 //    public boolean isPromotable() {
@@ -68,15 +70,15 @@ public class Mem2Reg {
         //judge promotable maybe?
         LinkedList<BasicBlock> que = new LinkedList<>(def);
         HashMap<BasicBlock, Boolean> addPhi = new HashMap<>();
-        HashMap<BasicBlock, Boolean> visit = new HashMap<>();
+        HashSet<BasicBlock> visit = new HashSet<>();
         while (!que.isEmpty()) {
             BasicBlock block = que.removeFirst();
             for (BasicBlock nxt: block.DomFrontier) {
                 if (!addPhi.containsKey(nxt)) {
                     nxt.addInst(new IRPhi(nxt, new IRRegister(it.res.name, it.type), it.res, it.type));
                     addPhi.put(nxt, true);
-                    if (!visit.containsKey(nxt)) {
-                        visit.put(nxt, true);
+                    if (!visit.contains(nxt)) {
+                        visit.add(nxt);
                         que.add(nxt);
                     }
                 }

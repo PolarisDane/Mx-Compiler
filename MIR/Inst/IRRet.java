@@ -3,6 +3,9 @@ package MIR.Inst;
 import Backend.IRVisitor;
 import MIR.BasicBlock;
 import MIR.Entity.Entity;
+import MIR.Entity.IRRegister;
+
+import java.util.HashSet;
 
 public class IRRet extends IRBaseInst {
     public Entity returnVal;
@@ -18,6 +21,20 @@ public class IRRet extends IRBaseInst {
             return "ret void";
         }
         return "ret " + returnVal.type + " " + returnVal.toString();
+    }
+
+    @Override
+    public HashSet<IRRegister> getUse() {
+        HashSet<IRRegister> use = new HashSet<>();
+        if (returnVal instanceof IRRegister reg) {
+            use.add(reg);
+        }
+        return use;
+    }
+
+    @Override
+    public IRRegister getDef() {
+        return null;
     }
 
     @Override

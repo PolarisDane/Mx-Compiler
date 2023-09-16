@@ -6,6 +6,8 @@ import MIR.Entity.Entity;
 import MIR.Entity.IRRegister;
 import MIR.Type.IRBaseType;
 
+import java.util.HashSet;
+
 public class IRIcmp extends IRBaseInst {
     public IRRegister res;
     public String cond;
@@ -25,6 +27,23 @@ public class IRIcmp extends IRBaseInst {
     @Override
     public String toString() {
         return res.toString() + " = icmp " + cond.toString() + " " + type.toString() + " " + op1.toString() + ", " + op2.toString();
+    }
+
+    @Override
+    public HashSet<IRRegister> getUse() {
+        HashSet<IRRegister> use = new HashSet<>();
+        if (op1 instanceof IRRegister reg1) {
+            use.add(reg1);
+        }
+        if (op2 instanceof IRRegister reg2) {
+            use.add(reg2);
+        }
+        return use;
+    }
+
+    @Override
+    public IRRegister getDef() {
+        return res;
     }
 
     @Override
