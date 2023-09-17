@@ -51,6 +51,11 @@ public class IRGetElementPtr extends IRBaseInst {
     }
 
     @Override
+    public Entity getConst() {
+        return null;
+    }
+
+    @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
     }

@@ -10,6 +10,11 @@ public class IRBoolConst extends IRConst {
         this.val = val;
     }
 
+    public IRBoolConst(boolean val, boolean cond) {
+        super(new IRIntType(1));
+        this.val = val;
+    }
+
     @Override
     public String toString() {
         return val ? "1" : "0";

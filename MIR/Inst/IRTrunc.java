@@ -2,8 +2,7 @@ package MIR.Inst;
 
 import Backend.IRVisitor;
 import MIR.BasicBlock;
-import MIR.Entity.Entity;
-import MIR.Entity.IRRegister;
+import MIR.Entity.*;
 import MIR.Type.IRBaseType;
 
 import java.util.HashSet;
@@ -39,6 +38,14 @@ public class IRTrunc extends IRBaseInst {
     @Override
     public IRRegister getDef() {
         return res;
+    }
+
+    @Override
+    public Entity getConst() {
+        if (val instanceof IRConst) {
+            return new IRBoolConst(((IRBoolConst) val).val, true);
+        }
+        return null;
     }
 
     @Override

@@ -3,6 +3,8 @@ package MIR.Inst;
 import Backend.IRVisitor;
 import MIR.BasicBlock;
 import MIR.Entity.Entity;
+import MIR.Entity.IRBoolConst;
+import MIR.Entity.IRConst;
 import MIR.Entity.IRRegister;
 import MIR.Type.IRBaseType;
 
@@ -49,6 +51,27 @@ public class IRPhi extends IRBaseInst {
     @Override
     public IRRegister getDef() {
         return res;
+    }
+
+    @Override
+    public Entity getConst() {
+        boolean flag = false;
+        Entity constVal = null;
+        for (var nxt: val) {
+            if (constVal == null) {
+                constVal = nxt;
+                flag = true;
+            }
+            else if (!constVal.equals(nxt)) {
+                flag = false;
+            }
+        }
+        if (flag){
+            return constVal;
+        }
+        else {
+            return null;
+        }
     }
 
     @Override

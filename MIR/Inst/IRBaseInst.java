@@ -2,6 +2,7 @@ package MIR.Inst;
 
 import Backend.IRVisitor;
 import MIR.BasicBlock;
+import MIR.Entity.Entity;
 import MIR.Entity.IRRegister;
 
 import java.util.HashSet;
@@ -19,6 +20,8 @@ public abstract class IRBaseInst {
     public abstract HashSet<IRRegister> getUse();
 
     public abstract IRRegister getDef();
+
+    public abstract Entity getConst();
 
     public abstract void accept(IRVisitor visitor);
 }

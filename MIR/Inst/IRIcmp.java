@@ -2,8 +2,7 @@ package MIR.Inst;
 
 import Backend.IRVisitor;
 import MIR.BasicBlock;
-import MIR.Entity.Entity;
-import MIR.Entity.IRRegister;
+import MIR.Entity.*;
 import MIR.Type.IRBaseType;
 
 import java.util.HashSet;
@@ -44,6 +43,34 @@ public class IRIcmp extends IRBaseInst {
     @Override
     public IRRegister getDef() {
         return res;
+    }
+
+    @Override
+    public Entity getConst() {
+        Entity entity = null;
+        if (op1 instanceof IRConst && op2 instanceof IRConst) {
+            switch(cond) {
+                case "sge":
+                    entity = new IRBoolConst(((IRIntConst) op1).val >= ((IRIntConst) op2).val);
+                    break;
+                case "sle":
+                    entity = new IRBoolConst(((IRIntConst) op1).val <= ((IRIntConst) op2).val);
+                    break;
+                case "sgt":
+                    entity = new IRBoolConst(((IRIntConst) op1).val > ((IRIntConst) op2).val);
+                    break;
+                case "slt":
+                    entity = new IRBoolConst(((IRIntConst) op1).val < ((IRIntConst) op2).val);
+                    break;
+                case "eq":
+                    entity = new IRBoolConst(((IRIntConst) op1).val == ((IRIntConst) op2).val);
+                    break;
+                case "ne":
+                    entity = new IRBoolConst(((IRIntConst) op1).val != ((IRIntConst) op2).val);
+                    break;
+            }
+        }
+        return entity;
     }
 
     @Override

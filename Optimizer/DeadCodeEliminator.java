@@ -13,8 +13,6 @@ import java.util.LinkedList;
 
 public class DeadCodeEliminator {
     Program program;
-    HashMap<IRRegister, HashSet<IRBaseInst>> use = new HashMap<>();
-    HashMap<IRRegister, IRBaseInst> def = new HashMap<>();
 
     public DeadCodeEliminator(Program program) {
         this.program = program;
@@ -27,8 +25,8 @@ public class DeadCodeEliminator {
     }
 
     public void visitFunc(Function it) {
-        use.clear();
-        def.clear();
+        HashMap<IRRegister, HashSet<IRBaseInst>> use = new HashMap<>();
+        HashMap<IRRegister, IRBaseInst> def = new HashMap<>();
         LinkedList<IRRegister> que = new LinkedList<>();
         HashSet<IRRegister> inQue = new HashSet<>();
         for (var block: it.blocks) {

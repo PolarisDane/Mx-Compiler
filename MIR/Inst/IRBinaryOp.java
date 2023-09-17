@@ -2,8 +2,7 @@ package MIR.Inst;
 
 import Backend.IRVisitor;
 import MIR.BasicBlock;
-import MIR.Entity.Entity;
-import MIR.Entity.IRRegister;
+import MIR.Entity.*;
 import MIR.Type.IRBaseType;
 
 import java.util.HashSet;
@@ -43,6 +42,51 @@ public class IRBinaryOp extends IRBaseInst {
     @Override
     public IRRegister getDef() {
         return res;
+    }
+
+    @Override
+    public Entity getConst() {
+        Entity entity = null;
+        if (op1 instanceof IRConst && op2 instanceof IRConst) {
+            switch (op) {
+                case "add":
+                    entity = new IRIntConst(((IRIntConst) op1).val + ((IRIntConst) op2).val);
+                    break;
+                case "sub":
+                    entity = new IRIntConst(((IRIntConst) op1).val - ((IRIntConst) op2).val);
+                    break;
+                case "mul":
+                    entity = new IRIntConst(((IRIntConst) op1).val * ((IRIntConst) op2).val);
+                    break;
+                case "sdiv":
+                    entity = new IRIntConst(((IRIntConst) op1).val / ((IRIntConst) op2).val);
+                    break;
+                case "srem":
+                    entity = new IRIntConst(((IRIntConst) op1).val % ((IRIntConst) op2).val);
+                    break;
+                case "and":
+                    entity = new IRIntConst(((IRIntConst) op1).val & ((IRIntConst) op2).val);
+                    break;
+                case "or":
+                    entity = new IRIntConst(((IRIntConst) op1).val | ((IRIntConst) op2).val);
+                    break;
+                case "shl":
+                    entity = new IRIntConst(((IRIntConst) op1).val << ((IRIntConst) op2).val);
+                    break;
+                case "ashr":
+                    entity = new IRIntConst(((IRIntConst) op1).val >> ((IRIntConst) op2).val);
+                    break;
+                case "xor":
+                    if (op2 instanceof IRBoolConst) {
+                        entity = new IRBoolConst((((IRIntConst) op1).val ^ (((IRBoolConst) op2).val ? 1 : 0)) != 0);
+                    }
+                    else {
+                        entity = new IRIntConst(((IRIntConst) op1).val ^ ((IRIntConst) op2).val);
+                    }
+                    break;
+            }
+        }
+        return entity;
     }
 
     @Override

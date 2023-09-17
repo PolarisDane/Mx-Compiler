@@ -27,11 +27,19 @@ public class IRBranch extends IRBaseInst {
     @Override
     public HashSet<IRRegister> getUse() {
         HashSet<IRRegister> use = new HashSet<>();
+        if (condition instanceof IRRegister reg) {
+            use.add(reg);
+        }
         return use;
     }
 
     @Override
     public IRRegister getDef() {
+        return null;
+    }
+
+    @Override
+    public Entity getConst() {
         return null;
     }
 
