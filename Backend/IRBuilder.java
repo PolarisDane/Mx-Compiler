@@ -769,8 +769,6 @@ public class IRBuilder implements ASTVisitor {
             it.falseThenWork.accept(this);
             curBlock.addInst(new IRJump(curBlock, endIf.label));
             curScope = curScope.parentScope;
-        }
-        if (it.falseThenWork != null) {
             inFunc.blocks.add(falseBranch);
         }
         inFunc.blocks.add(endIf);

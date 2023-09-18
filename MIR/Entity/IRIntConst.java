@@ -11,6 +11,14 @@ public class IRIntConst extends IRConst{
     }
 
     @Override
+    public boolean equals(Object it) {
+        if (!(it instanceof IRIntConst)) {
+            return false;
+        }
+        return val == ((IRIntConst) it).val;
+    }
+
+    @Override
     public String toString() {
         return String.valueOf(val);
     }

@@ -16,6 +16,9 @@ import java.util.LinkedList;
 public class ConstPropagation {
     Program program;
 
+    LinkedList<IRBaseInst> que = new LinkedList<>();
+    HashSet<IRBaseInst> inQue = new HashSet<>();
+
     public ConstPropagation(Program program) {
         this.program = program;
     }
@@ -27,8 +30,8 @@ public class ConstPropagation {
     }
 
     public void visitFunc(Function it) {
-        LinkedList<IRBaseInst> que = new LinkedList<>();
-        HashSet<IRBaseInst> inQue = new HashSet<>();
+        que.clear();
+        inQue.clear();
         for (var block: it.blocks) {
             for (var inst: block.insts) {
                 if (inst.getConst() != null) {
@@ -40,6 +43,9 @@ public class ConstPropagation {
         while (!que.isEmpty()) {
             IRBaseInst inst = que.removeFirst();
             inQue.remove(inst);
+            if (inst.isDead) {
+                continue;
+            }
             var defVal = inst.getDef();
             var constVal = inst.getConst();
             if (constVal != null) {
@@ -51,8 +57,7 @@ public class ConstPropagation {
                         inQue.add(nxt);
                     }
                 }
-            }
-            else if (inst instanceof IRBranch branch && branch.condition instanceof IRBoolConst cond) {
+            } else if (inst instanceof IRBranch branch && branch.condition instanceof IRBoolConst cond) {
                 BasicBlock curBlock = branch.parentBlock;
                 BasicBlock removeBlock = cond.val ? branch.falseThenWork : branch.trueThenWork;
                 BasicBlock remainBlock = cond.val ? branch.trueThenWork : branch.falseThenWork;
@@ -61,34 +66,31 @@ public class ConstPropagation {
                 curBlock.insts.add(new IRJump(curBlock, remainBlock.label));
                 curBlock.succ.remove(removeBlock);
 
-                for (var succ: removeBlock.succ) {
-                    for (var phiInst : succ.insts) {
-                        if (!(phiInst instanceof IRPhi phi)) {
+                for (var phiInst : removeBlock.insts) {
+                    if (!(phiInst instanceof IRPhi phi)) {
+                        break;
+                    }
+                    boolean flag = false;
+                    for (int i = 0; i < phi.fromBlock.size(); i++) {
+                        if (phi.fromBlock.get(i) == curBlock) {
+                            phi.fromBlock.remove(i);
+                            phi.val.remove(i);
+                            flag = true;
                             break;
                         }
-                        boolean flag = false;
-                        for (int i = 0; i < phi.fromBlock.size(); i++) {
-                            if (phi.fromBlock.get(i) == removeBlock) {
-                                phi.fromBlock.remove(i);
-                                phi.val.remove(i);
-                                flag = true;
-                            }
-                        }
-                        if (flag && !inQue.contains(phi)) {
-                            que.add(phi);
-                            inQue.add(phi);
-                        }
-                    }//phi already added into insts
-                    succ.pred.remove(removeBlock);
-                }
-
+                    }
+                    if (flag && !inQue.contains(phi)) {
+                        que.add(phi);
+                        inQue.add(phi);
+                    }
+                }//phi already added into insts
                 removeBlock.pred.remove(curBlock);
                 if (removeBlock.pred.isEmpty()) {
-                    removeBlock(removeBlock);
-                    it.blocks.remove(removeBlock);
+                    removeBlock(removeBlock, it);
                 }
             }
         }
+        it.blockMap.clear();
         for (var block: it.blocks) {
             Iterator<IRBaseInst> iter = block.insts.iterator();
             while (iter.hasNext()) {
@@ -96,14 +98,43 @@ public class ConstPropagation {
                     iter.remove();
                 }
             }
+            it.blockMap.put(block.label, block);
         }
     }
 
-    public void removeBlock(BasicBlock it) {
-
+    public void removeBlock(BasicBlock it, Function inFunc) {
+        for (var inst: it.insts) {
+            inst.isDead = true;
+        }
+        inFunc.blocks.remove(it);
+        for (var succ: it.succ) {
+            for (var phiInst : succ.insts) {
+                if (!(phiInst instanceof IRPhi phi)) {
+                    break;
+                }
+                for (int i = 0; i < phi.fromBlock.size(); i++) {
+                    if (phi.fromBlock.get(i) == it) {
+                        phi.fromBlock.remove(i);
+                        phi.val.remove(i);
+                        break;
+                    }
+                }
+                if (phi.getConst() != null && !inQue.contains(phi)) {
+                    que.add(phi);
+                    inQue.add(phi);
+                }
+            }
+            succ.pred.remove(it);
+            if (succ.pred.isEmpty()) {
+                removeBlock(succ, inFunc);
+            }
+        }
     }
 
     public void replace(IRBaseInst inst, IRRegister reg, Entity val) {
+        if (inst.isDead) {
+            return;
+        }
         if (inst instanceof IRPhi phi) {
             for (int i = 0; i < phi.val.size(); i++) {
                 Entity value = phi.val.get(i);

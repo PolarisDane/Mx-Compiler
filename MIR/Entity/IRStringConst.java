@@ -16,6 +16,14 @@ public class IRStringConst extends IRConst{
     }
 
     @Override
+    public boolean equals(Object it) {
+        if (!(it instanceof IRStringConst)) {
+            return false;
+        }
+        return val.equals(((IRStringConst) it).val);
+    }
+
+    @Override
     public String toString() {
         return "@.str." + id;
     }
