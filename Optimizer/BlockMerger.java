@@ -31,12 +31,13 @@ public class BlockMerger {
             if (isDead.contains(nxt.label)) {
                 continue;
             }
-            while (nxt.insts.size() == 1) {
-                var inst = nxt.insts.getFirst();
+            while (true) {
+                var inst = nxt.insts.getLast();
                 if (inst instanceof IRJump jump) {
                     var toBlock = it.blockMap.get(jump.label);
                     if (toBlock.pred.size() == 1) {
-                        nxt.insts = toBlock.insts;
+                        nxt.insts.remove(inst);
+                        nxt.insts.addAll(toBlock.insts);
                         blockMap.put(toBlock.label, nxt);
                         isDead.add(toBlock.label);
                     }

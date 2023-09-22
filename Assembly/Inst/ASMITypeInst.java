@@ -2,6 +2,8 @@ package Assembly.Inst;
 
 import Assembly.Operand.*;
 
+import java.util.HashSet;
+
 public class ASMITypeInst extends ASMBaseInst {
 
     public Imm imm;

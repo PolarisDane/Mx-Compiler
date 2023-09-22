@@ -63,9 +63,6 @@ public class Mem2Reg {
                 }
             }
         }
-        if (use.isEmpty()) {
-
-        }//can be discarded
         promotable.put(it.res, true);
         //judge promotable maybe?
         LinkedList<BasicBlock> que = new LinkedList<>(def);

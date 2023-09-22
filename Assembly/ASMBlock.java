@@ -3,18 +3,24 @@ package Assembly;
 import Assembly.Inst.ASMBaseInst;
 import Assembly.Inst.ASMBeqInst;
 import Assembly.Inst.ASMJumpInst;
+import Assembly.Operand.Reg;
 import MIR.Inst.IRJump;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 
 public class ASMBlock {
     public String label;
 //    public ASMBaseInst head = null, tail = null;
-//    public LinkedList<ASMBlock> succ = new LinkedList<>();
-//    public LinkedList<ASMBlock> pred = new LinkedList<>();
+    public LinkedList<ASMBlock> succ = new LinkedList<>();
+    public LinkedList<ASMBlock> pred = new LinkedList<>();
     public LinkedList<ASMBaseInst> insts = new LinkedList<>();
     public LinkedList<ASMBaseInst> flowInsts = new LinkedList<>();
     public LinkedList<ASMBaseInst> phiRemoval = new LinkedList<>();
+    public HashSet<Reg> use = new HashSet<>();
+    public HashSet<Reg> def = new HashSet<>();
+    public HashSet<Reg> liveIn = new HashSet<>();
+    public HashSet<Reg> liveOut = new HashSet<>();
 
     public ASMBlock(String label) {
         this.label = label;

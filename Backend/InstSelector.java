@@ -110,7 +110,7 @@ public class InstSelector implements IRVisitor {
             nxt.accept(this);
         }
         for (int i = 0; i < it.params.size() && i < 8; i++) {
-            inFunc.blocks.get(0).insts.addFirst(new ASMMvInst(it.params.get(i).ASMReg, new PhyReg("a" + i)));
+            inFunc.blocks.get(0).insts.addFirst(new ASMMvInst(it.params.get(i).ASMReg, PhyReg.phyRegMap.get("a" + i)));
         }
         inFunc.stackLength = inFunc.stackStart + VirtualReg.cnt * 4;
         if (inFunc.stackLength % 16 != 0) {
@@ -118,12 +118,12 @@ public class InstSelector implements IRVisitor {
         }
         ASMBlock first = inFunc.blocks.get(0);
         ASMBlock last = inFunc.blocks.get(inFunc.blocks.size() - 1);
-        first.insts.addFirst(new ASMStoreInst(32, new PhyReg("sp"), new PhyReg("ra"), new Imm(inFunc.argsStack)));
-        first.insts.addFirst(new ASMRTypeInst(new PhyReg("sp"), new PhyReg("sp"), new PhyReg("t3"), "add"));
-        first.insts.addFirst(new ASMLiInst(new PhyReg("t3"), new Imm(-inFunc.stackLength)));
-        last.insts.add(new ASMLoadInst(32, new PhyReg("ra"), new PhyReg("sp"), new Imm(inFunc.argsStack)));
-        last.insts.add(new ASMLiInst(new PhyReg("t3"), new Imm(inFunc.stackLength)));
-        last.insts.add(new ASMRTypeInst(new PhyReg("sp"), new PhyReg("sp"), new PhyReg("t3"), "add"));
+        first.insts.addFirst(new ASMStoreInst(32, PhyReg.phyRegMap.get("sp"), PhyReg.phyRegMap.get("ra"), new Imm(inFunc.argsStack)));
+        first.insts.addFirst(new ASMRTypeInst(PhyReg.phyRegMap.get("sp"), PhyReg.phyRegMap.get("sp"), PhyReg.phyRegMap.get("t3"), "add"));
+        first.insts.addFirst(new ASMLiInst(PhyReg.phyRegMap.get("t3"), new Imm(-inFunc.stackLength)));
+        last.insts.add(new ASMLoadInst(32, PhyReg.phyRegMap.get("ra"), PhyReg.phyRegMap.get("sp"), new Imm(inFunc.argsStack)));
+        last.insts.add(new ASMLiInst(PhyReg.phyRegMap.get("t3"), new Imm(inFunc.stackLength)));
+        last.insts.add(new ASMRTypeInst(PhyReg.phyRegMap.get("sp"), PhyReg.phyRegMap.get("sp"), PhyReg.phyRegMap.get("t3"), "add"));
         inFunc.blocks.get(inFunc.blocks.size() - 1).insts.add(new ASMRetInst());
     }
 
@@ -139,7 +139,7 @@ public class InstSelector implements IRVisitor {
 
     @Override
     public void visit(IRAlloca it) {
-        curBlock.insts.add(new ASMITypeInst(getReg(it.res), new PhyReg("sp"), new Imm(inFunc.stackStart), "addi"));
+        curBlock.insts.add(new ASMITypeInst(getReg(it.res), PhyReg.phyRegMap.get("sp"), new Imm(inFunc.stackStart), "addi"));
         inFunc.stackStart += 4;
     }
 
@@ -147,6 +147,10 @@ public class InstSelector implements IRVisitor {
     public void visit(IRBranch it) {
         curBlock.flowInsts.add(new ASMBeqInst(getReg(it.condition), blockMap.get(it.falseThenWork.label)));
         curBlock.flowInsts.add(new ASMJumpInst(blockMap.get(it.trueThenWork.label)));
+        curBlock.succ.add(blockMap.get(it.trueThenWork.label));
+        blockMap.get(it.trueThenWork.label).pred.add(curBlock);
+        curBlock.succ.add(blockMap.get(it.falseThenWork.label));
+        blockMap.get(it.falseThenWork.label).pred.add(curBlock);
     }
 
     @Override
@@ -187,15 +191,15 @@ public class InstSelector implements IRVisitor {
     public void visit(IRCall it) {
         for (int i = 0; i < it.args.size(); i++) {
             if (i < 8) {
-                curBlock.insts.add(new ASMMvInst(new PhyReg("a" + i), getReg(it.args.get(i))));
+                curBlock.insts.add(new ASMMvInst(PhyReg.phyRegMap.get("a" + i), getReg(it.args.get(i))));
             }
             else {
-                storeReg(it.args.get(i).type.size, new PhyReg("sp"), getReg(it.args.get(i)), (i - 8) * 4);
+                storeReg(it.args.get(i).type.size, PhyReg.phyRegMap.get("sp"), getReg(it.args.get(i)), (i - 8) * 4);
             }
         }
         curBlock.insts.add(new ASMCallInst(it.funcName));
         if (it.res != null) {
-            curBlock.insts.add(new ASMMvInst(getReg(it.res), new PhyReg("a0")));
+            curBlock.insts.add(new ASMMvInst(getReg(it.res), PhyReg.phyRegMap.get("a0")));
         }
     }
 
@@ -242,6 +246,8 @@ public class InstSelector implements IRVisitor {
     @Override
     public void visit(IRJump it) {
         curBlock.flowInsts.add(new ASMJumpInst(blockMap.get(it.label)));
+        curBlock.succ.add(blockMap.get(it.label));
+        blockMap.get(it.label).pred.add(curBlock);
     }
 
     @Override
@@ -273,9 +279,9 @@ public class InstSelector implements IRVisitor {
     @Override
     public void visit(IRRet it) {
         if (it.returnVal != null) {
-            curBlock.insts.add(new ASMMvInst(new PhyReg("a0"), getReg(it.returnVal)));
+            curBlock.insts.add(new ASMMvInst(PhyReg.phyRegMap.get("a0"), getReg(it.returnVal)));
         }
-        loadReg(32, new PhyReg("sp"), new PhyReg("ra"), inFunc.argsStack);
+        loadReg(32, PhyReg.phyRegMap.get("sp"), PhyReg.phyRegMap.get("ra"), inFunc.argsStack);
     }
 
     @Override

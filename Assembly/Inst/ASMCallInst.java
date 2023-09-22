@@ -4,6 +4,8 @@ import Assembly.ASMBlock;
 import Assembly.ASMFunction;
 import Assembly.Operand.*;
 
+import java.util.HashSet;
+
 public class ASMCallInst extends ASMBaseInst {
     public String funcName;
     public ASMCallInst(String funcName) {

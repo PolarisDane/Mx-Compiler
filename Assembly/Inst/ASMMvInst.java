@@ -2,6 +2,8 @@ package Assembly.Inst;
 
 import Assembly.Operand.*;
 
+import java.util.HashSet;
+
 public class ASMMvInst extends ASMBaseInst {
     public ASMMvInst(Reg rd, Reg rs1) {
         this.rd = rd;

@@ -2,6 +2,8 @@ package Assembly.Inst;
 
 import Assembly.Operand.*;
 
+import java.util.HashSet;
+
 public class ASMLaInst extends ASMBaseInst {
     public String symbol;
 
