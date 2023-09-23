@@ -19,6 +19,7 @@ public class ASMFunction {
     public int stackLength = 0;
     public int stackStart = 0;
     public int argsStack = 0;
+    public int spilledLength = 0;
 
     public ASMFunction(String name) {
         this.name = name;

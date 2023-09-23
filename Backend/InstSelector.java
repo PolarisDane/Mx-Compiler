@@ -31,7 +31,7 @@ public class InstSelector implements IRVisitor {
     Reg getReg(Entity entity) {
         if (entity.ASMReg == null) {
             if (entity instanceof IRRegister) {
-                entity.ASMReg = new VirtualReg(((IRRegister) entity).type.size);
+                entity.ASMReg = new VirtualReg(entity.type.size);
             }
             else if (entity instanceof IRConst) {
                 entity.ASMReg = immToReg(new Imm(entity));
