@@ -15,11 +15,11 @@ public class RegAllocator {
     public ASMProgram program;
     int stackLength;
     int stackStart;
-    PhyReg Regt0 = new PhyReg("t0");
-    PhyReg Regt1 = new PhyReg("t1");
-    PhyReg Regt2 = new PhyReg("t2");
-    PhyReg Regt3 = new PhyReg("t3");
-    PhyReg Regsp = new PhyReg("sp");
+    PhyReg Regt0 = PhyReg.phyRegMap.get("t0");
+    PhyReg Regt1 = PhyReg.phyRegMap.get("t1");
+    PhyReg Regt2 = PhyReg.phyRegMap.get("t2");
+    PhyReg Regt3 = PhyReg.phyRegMap.get("t3");
+    PhyReg Regsp = PhyReg.phyRegMap.get("sp");
     LinkedList<ASMBaseInst> insts;
     public RegAllocator(ASMProgram program) {
         this.program = program;
@@ -27,8 +27,9 @@ public class RegAllocator {
 
     public void work() {
         for (var func: program.functions) {
-            stackLength = func.stackLength;
-            stackStart = func.stackStart;
+            //to be modified for usage if needed
+//            stackLength = func.stackLength;
+//            stackStart = func.stackStart;
             for (var block: func.blocks) {
                 visitAndAllocate(block);
             }

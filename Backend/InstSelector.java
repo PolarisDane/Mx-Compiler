@@ -92,7 +92,7 @@ public class InstSelector implements IRVisitor {
         VirtualReg.cnt = 0;
         int maxArgsCnt = 0;
         for (var nxt: it.blocks) {
-            blockMap.put(nxt.label, new ASMBlock(".BBL" + (++blockCnt)));
+            blockMap.put(nxt.label, new ASMBlock(".BBL" + (++blockCnt), nxt.loopDepth));
             for (var inst: nxt.insts) {
                 if (inst instanceof IRCall) {
                     maxArgsCnt = Integer.max(maxArgsCnt, ((IRCall) inst).args.size());
@@ -103,7 +103,6 @@ public class InstSelector implements IRVisitor {
             it.params.get(i).ASMReg = new VirtualReg(32);
         }
         inFunc.argsStack = Integer.max(maxArgsCnt - 8, 0) * 4;
-        inFunc.stackStart = inFunc.argsStack + 4;
         for (var nxt: it.blocks) {
             curBlock = blockMap.get(nxt.label);
             inFunc.blocks.add(curBlock);
@@ -112,19 +111,14 @@ public class InstSelector implements IRVisitor {
         for (int i = 0; i < it.params.size() && i < 8; i++) {
             inFunc.blocks.get(0).insts.addFirst(new ASMMvInst(it.params.get(i).ASMReg, PhyReg.phyRegMap.get("a" + i)));
         }
-        inFunc.stackLength = inFunc.stackStart + VirtualReg.cnt * 4;
-        if (inFunc.stackLength % 16 != 0) {
-            inFunc.stackLength += 16 - inFunc.stackLength % 16;
-        }
         ASMBlock first = inFunc.blocks.get(0);
         ASMBlock last = inFunc.blocks.get(inFunc.blocks.size() - 1);
-        first.insts.addFirst(new ASMStoreInst(32, PhyReg.phyRegMap.get("sp"), PhyReg.phyRegMap.get("ra"), new Imm(inFunc.argsStack)));
-        first.insts.addFirst(new ASMRTypeInst(PhyReg.phyRegMap.get("sp"), PhyReg.phyRegMap.get("sp"), PhyReg.phyRegMap.get("t3"), "add"));
-        first.insts.addFirst(new ASMLiInst(PhyReg.phyRegMap.get("t3"), new Imm(-inFunc.stackLength)));
-        last.insts.add(new ASMLoadInst(32, PhyReg.phyRegMap.get("ra"), PhyReg.phyRegMap.get("sp"), new Imm(inFunc.argsStack)));
-        last.insts.add(new ASMLiInst(PhyReg.phyRegMap.get("t3"), new Imm(inFunc.stackLength)));
-        last.insts.add(new ASMRTypeInst(PhyReg.phyRegMap.get("sp"), PhyReg.phyRegMap.get("sp"), PhyReg.phyRegMap.get("t3"), "add"));
-        inFunc.blocks.get(inFunc.blocks.size() - 1).insts.add(new ASMRetInst());
+        for (var reg: PhyReg.calleeSave()) {
+            VirtualReg vReg = new VirtualReg(32);
+            first.insts.addFirst(new ASMMvInst(reg, vReg));
+            last.insts.add(new ASMMvInst(vReg, reg));
+        }//callee save regs
+        last.insts.add(new ASMRetInst());
     }
 
     @Override
@@ -139,8 +133,8 @@ public class InstSelector implements IRVisitor {
 
     @Override
     public void visit(IRAlloca it) {
-        curBlock.insts.add(new ASMITypeInst(getReg(it.res), PhyReg.phyRegMap.get("sp"), new Imm(inFunc.stackStart), "addi"));
-        inFunc.stackStart += 4;
+        curBlock.insts.add(new ASMITypeInst(getReg(it.res), PhyReg.phyRegMap.get("sp"), new Imm(inFunc.argsStack + inFunc.allocaLength), "addi"));
+        inFunc.allocaLength += 4;
     }
 
     @Override

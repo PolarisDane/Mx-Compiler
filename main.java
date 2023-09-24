@@ -1,4 +1,5 @@
 import AST.*;
+import Backend.AdvancedRegAllocator;
 import Backend.IRBuilder;
 import Backend.InstSelector;
 import Backend.RegAllocator;
@@ -42,14 +43,13 @@ public class main {
             irBuilder.visit(ASTRoot);
 //            System.out.println(irBuilder.program.toString());
             new IROptimizier(irBuilder.program).optimize();
-//            System.out.println(irBuilder.program.toString());
+            System.out.println(irBuilder.program.toString());
             InstSelector instSelector = new InstSelector();
             instSelector.visit(irBuilder.program);
-            for (var nxt: instSelector.program.functions) {
-                new LivenessAnalyzer(nxt).analyze();
-            }
-            RegAllocator regAllocator = new RegAllocator(instSelector.program);
-            regAllocator.work();
+//            RegAllocator regAllocator = new RegAllocator(instSelector.program);
+//            regAllocator.work();
+            new AdvancedRegAllocator(instSelector.program).work();
+            System.out.println(instSelector.program.toString());
         } catch (error err) {
             System.err.println(err.toString());
             throw new RuntimeException();

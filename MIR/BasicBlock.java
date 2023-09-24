@@ -25,17 +25,20 @@ public class BasicBlock {
     public ArrayList<BasicBlock> DomFrontier = new ArrayList<>();
     public ArrayList<BasicBlock> DTChild = new ArrayList<>();
     public ArrayList<IRPhi> phiInst = new ArrayList<>();
+    public int loopDepth;
 
-    public BasicBlock(String label, Function inFunc) {
+    public BasicBlock(String label, Function inFunc, int loopDepth) {
         id = cnt++;
         this.label = label + id;
         this.inFunc = inFunc;
+        this.loopDepth = loopDepth;
         inFunc.blockMap.put(this.label, this);
     }
 
-    public BasicBlock(String label, Function inFunc, boolean no_id) {
+    public BasicBlock(String label, Function inFunc, int loopDepth, boolean no_id) {
         this.label = label;
         this.inFunc = inFunc;
+        this.loopDepth = loopDepth;
         inFunc.blockMap.put(this.label, this);
     }
 

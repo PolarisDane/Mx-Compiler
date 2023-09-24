@@ -15,7 +15,7 @@ import java.util.LinkedList;
 import java.util.Stack;
 
 public class AdvancedRegAllocator {
-    public static int K;
+    public static int K = 27;
 
     public ASMProgram program;
     public AdvancedRegAllocator(ASMProgram program) {
@@ -91,7 +91,7 @@ public class AdvancedRegAllocator {
         }
     }
 
-    public void init() {
+    public void init(ASMFunction it) {
         initial.clear();
         simplifyWorklist.clear();
         freezeWorklist.clear();
@@ -113,14 +113,51 @@ public class AdvancedRegAllocator {
         alias.clear();
         color.clear();
         spilledTemp.clear();
-
-
-
+        for (var reg: PhyReg.phyRegMap.values()) {
+            precolored.add(reg);
+            adjList.put(reg, new HashSet<>());
+            degree.put(reg, Integer.MAX_VALUE);
+            moveList.put(reg, new HashSet<>());
+            alias.put(reg, null);
+            color.put(reg, reg.id);
+            reg.spillWeight = 0;
+        }
+        for (var block: it.blocks) {
+            for (var inst: block.insts) {
+                initial.addAll(inst.getDef());
+                initial.addAll(inst.getUse());
+            }
+        }
+        initial.remove(precolored);
+        for (var reg: initial) {
+            adjList.put(reg, new HashSet<>());
+            degree.put(reg, 0);
+            moveList.put(reg, new HashSet<>());
+            alias.put(reg, null);
+            color.put(reg, null);
+            reg.spillWeight = 0;
+        }
+        calcSpillWeight(it);
     }
+
+    public void calcSpillWeight(ASMFunction it) {
+        for (var block: it.blocks) {
+            double weight = Math.pow(10, block.loopDepth);
+            for (var inst: block.insts) {
+                for (var reg: inst.getDef()) {
+                    reg.spillWeight += weight;
+                }
+                for (var reg: inst.getUse()) {
+                    reg.spillWeight += weight;
+                }
+            }
+        }
+    }
+
     public void graphColoring(ASMFunction it) {
         while(true) {
             new LivenessAnalyzer(it).analyze();
-            init();
+            init(it);
             build(it);
             makeWorklist();
             do {
@@ -165,7 +202,7 @@ public class AdvancedRegAllocator {
 
     public void build(ASMFunction it) {
         for (var block: it.blocks) {
-            HashSet<Reg> liveOut = new HashSet<Reg>(block.liveOut);
+            HashSet<Reg> liveOut = new HashSet<>(block.liveOut);
             for (int i = block.insts.size() - 1; i >= 0; i--) {
                 ASMBaseInst inst = block.insts.get(i);
                 if (inst instanceof ASMMvInst) {
@@ -214,7 +251,6 @@ public class AdvancedRegAllocator {
 
     public void makeWorklist() {
         for (var nxt: initial) {
-            initial.remove(nxt);
             if (degree.get(nxt) >= K) {
                 spillWorklist.add(nxt);
             }
@@ -225,6 +261,8 @@ public class AdvancedRegAllocator {
                 simplifyWorklist.add(nxt);
             }
         }
+        initial.clear();
+        //can not remove while iterating
     }
 
     public void enableMoves(HashSet<Reg> nodes) {
@@ -323,10 +361,10 @@ public class AdvancedRegAllocator {
             //move inst constrained and can not be coalesced
         }
         else {
-            if (precolored.contains(e.x) && Briggs(e.x, e.y) && George(e.y, e.x)) {
+            if ((precolored.contains(e.x) && Briggs(e.x, e.y)) || (!precolored.contains(e.x) && George(e.y, e.x))) {
                 coalescedMoves.add(mvInst);
                 combine(e.x, e.y);
-                addWorklist(e.x);
+                addWorklist(e.x);//why
             }
             else {
                 activeMoves.add(mvInst);
@@ -378,8 +416,8 @@ public class AdvancedRegAllocator {
     public void selectSpill() {
         Reg selected = null;
         for (Reg reg: spillWorklist) {
-            if (selected == null || ) {
-                selected = reg;//spillweight not done
+            if (selected == null || (reg.spillWeight / degree.get(reg) > selected.spillWeight / degree.get(selected) && !spilledTemp.contains(reg))) {
+                selected = reg;//we can't choose reg that originated from spill
             }
         }
         spillWorklist.remove(selected);
@@ -416,10 +454,9 @@ public class AdvancedRegAllocator {
 
     public void rewriteProgram(ASMFunction it) {
         for (Reg reg: spilledNodes) {
-            ((VirtualReg) reg).stackOffset = it.stackLength + it.spilledLength;
+            reg.stackOffset = it.argsStack + it.allocaLength + it.spilledLength;
             it.spilledLength += 4;
         }//allocate space on stack
-
         for (var block: it.blocks) {
             newInsts.clear();
             for (var inst: block.insts) {
@@ -466,7 +503,7 @@ public class AdvancedRegAllocator {
             else {
                 VirtualReg addr = new VirtualReg(32);
                 spilledTemp.add(addr);
-                newInsts.add(new ASMLiInst(addr, new Imm(reg.stackOffset));
+                newInsts.add(new ASMLiInst(addr, new Imm(reg.stackOffset)));
                 newInsts.add(new ASMRTypeInst(addr, addr, PhyReg.phyRegMap.get("sp"), "add"));
                 newInsts.add(new ASMStoreInst(32, addr, newReg));
             }

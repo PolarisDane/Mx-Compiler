@@ -21,9 +21,11 @@ public class ASMBlock {
     public HashSet<Reg> def = new HashSet<>();
     public HashSet<Reg> liveIn = new HashSet<>();
     public HashSet<Reg> liveOut = new HashSet<>();
+    public int loopDepth;
 
-    public ASMBlock(String label) {
+    public ASMBlock(String label, int loopDepth) {
         this.label = label;
+        this.loopDepth = loopDepth;
     }
 
     public void work() {

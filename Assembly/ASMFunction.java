@@ -16,10 +16,9 @@ public class ASMFunction {
 
     public String name;
     public ArrayList<ASMBlock> blocks = new ArrayList<>();
-    public int stackLength = 0;
-    public int stackStart = 0;
     public int argsStack = 0;
     public int spilledLength = 0;
+    public int allocaLength = 0;
 
     public ASMFunction(String name) {
         this.name = name;
