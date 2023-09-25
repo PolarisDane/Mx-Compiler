@@ -25,8 +25,16 @@ public class LivenessAnalyzer {
 
     public void analyze() {
         for (var block: inFunc.blocks) {
+            block.liveIn.clear();
+            block.liveOut.clear();
+            block.use.clear();
+            block.def.clear();
             for (var inst: block.insts) {
-                block.use.addAll(inst.getUse());
+                for (var use: inst.getUse()) {
+                    if (!block.def.contains(use)) {
+                        block.use.add(use);
+                    }
+                }
                 block.def.addAll(inst.getDef());
             }
         }
@@ -35,14 +43,13 @@ public class LivenessAnalyzer {
         while (!que.isEmpty()) {
             ASMBlock block = que.removeFirst();
             inQue.remove(block);
-            HashSet<Reg> newIn = new HashSet<>();
             HashSet<Reg> newOut = new HashSet<>();
-            newIn.addAll(block.use);
-            newIn.addAll(block.liveOut);
-            newIn.removeAll(block.def);
             for (var succ: block.succ) {
                 newOut.addAll(succ.liveIn);
             }
+            HashSet<Reg> newIn = new HashSet<>(newOut);
+            newIn.removeAll(block.def);
+            newIn.addAll(block.use);
             if (!newIn.equals(block.liveIn) || !newOut.equals(block.liveOut)) {
                 for (var pred: block.pred) {
                     if (!inQue.contains(pred)) {

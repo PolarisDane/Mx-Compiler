@@ -43,7 +43,7 @@ public class main {
             irBuilder.visit(ASTRoot);
 //            System.out.println(irBuilder.program.toString());
             new IROptimizier(irBuilder.program).optimize();
-            System.out.println(irBuilder.program.toString());
+//            System.out.println(irBuilder.program.toString());
             InstSelector instSelector = new InstSelector();
             instSelector.visit(irBuilder.program);
 //            RegAllocator regAllocator = new RegAllocator(instSelector.program);

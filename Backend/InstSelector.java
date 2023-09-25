@@ -103,9 +103,13 @@ public class InstSelector implements IRVisitor {
             it.params.get(i).ASMReg = new VirtualReg(32);
         }
         inFunc.argsStack = Integer.max(maxArgsCnt - 8, 0) * 4;
-        for (var nxt: it.blocks) {
+        for (int i = 0; i < it.blocks.size(); i++) {
+            BasicBlock nxt = it.blocks.get(i);
             curBlock = blockMap.get(nxt.label);
             inFunc.blocks.add(curBlock);
+            if (i == 0) {
+                storeReg(32, PhyReg.phyRegMap.get("sp"), PhyReg.phyRegMap.get("ra"), inFunc.argsStack);
+            }
             nxt.accept(this);
         }
         for (int i = 0; i < it.params.size() && i < 8; i++) {
@@ -115,17 +119,13 @@ public class InstSelector implements IRVisitor {
         ASMBlock last = inFunc.blocks.get(inFunc.blocks.size() - 1);
         for (var reg: PhyReg.calleeSave()) {
             VirtualReg vReg = new VirtualReg(32);
-            first.insts.addFirst(new ASMMvInst(reg, vReg));
-            last.insts.add(new ASMMvInst(vReg, reg));
+            first.insts.addFirst(new ASMMvInst(vReg, reg));
+            last.insts.add(new ASMMvInst(reg, vReg));
         }//callee save regs
-        last.insts.add(new ASMRetInst());
     }
 
     @Override
     public void visit(BasicBlock it) {
-        for (var nxt: it.phiInst) {
-            nxt.accept(this);
-        }
         for (var nxt: it.insts) {
             nxt.accept(this);
         }
@@ -251,20 +251,21 @@ public class InstSelector implements IRVisitor {
 
     @Override
     public void visit(IRPhi it) {
-        ASMBlock tmp = curBlock;
+        VirtualReg res = new VirtualReg(32);
+        curBlock.insts.add(new ASMMvInst(getReg(it.res),res));
         for (int i = 0; i < it.val.size(); i++) {
             Entity val = it.val.get(i);
             if (val instanceof IRConst) {
                 if (val instanceof IRStringConst) {
                     VirtualReg vReg = new VirtualReg(32);
                     blockMap.get(it.fromBlock.get(i).label).phiRemoval.add(new ASMLaInst(vReg, ((Global) val.ASMReg).name));
-                    blockMap.get(it.fromBlock.get(i).label).phiRemoval.add(new ASMMvInst(getReg(it.res), vReg));
+                    blockMap.get(it.fromBlock.get(i).label).phiRemoval.add(new ASMMvInst(res, vReg));
                 } else {
-                    blockMap.get(it.fromBlock.get(i).label).phiRemoval.add(new ASMLiInst(getReg(it.res), new Imm(val)));
+                    blockMap.get(it.fromBlock.get(i).label).phiRemoval.add(new ASMLiInst(res, new Imm(val)));
                 }
             }
             else {
-                blockMap.get(it.fromBlock.get(i).label).phiRemoval.add(new ASMMvInst(getReg(it.res), getReg(val)));
+                blockMap.get(it.fromBlock.get(i).label).phiRemoval.add(new ASMMvInst(res, getReg(val)));
             }
         }
         //not used, maybe later

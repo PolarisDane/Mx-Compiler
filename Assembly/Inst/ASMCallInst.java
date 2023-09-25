@@ -15,4 +15,9 @@ public class ASMCallInst extends ASMBaseInst {
     public String toString() {
         return "call " + funcName;
     }
+
+    @Override
+    public HashSet<Reg> getDef() {
+        return new HashSet<>(PhyReg.callerSave());
+    }
 }

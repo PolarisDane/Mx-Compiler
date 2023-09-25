@@ -1,5 +1,6 @@
 package Backend;
 
+import Assembly.ASMBlock;
 import Assembly.ASMFunction;
 import Assembly.ASMProgram;
 import Assembly.Inst.*;
@@ -47,7 +48,7 @@ public class AdvancedRegAllocator {
     public HashSet<Reg> spilledTemp = new HashSet<>();
     LinkedList<ASMBaseInst> newInsts = new LinkedList<>();
 
-    public class edge {
+    public static class edge {
         public Reg x, y;
         public edge(Reg x, Reg y) {
             this.x = x;
@@ -59,10 +60,7 @@ public class AdvancedRegAllocator {
             if (!(obj instanceof edge e)) {
                 return false;
             }
-            if ((x == e.x && y == e.y) || (x == e.y && y == e.x)) {
-                return true;
-            }
-            return false;
+            return (x == e.x && y == e.y) || (x == e.y && y == e.x);
         }
 
         @Override
@@ -86,9 +84,27 @@ public class AdvancedRegAllocator {
         }
     }
     public void work() {
-        for (var nxt:program.functions) {
+        for (var nxt: program.functions) {
             graphColoring(nxt);
+            stackAllocate(nxt);
         }
+    }
+
+    public void stackAllocate(ASMFunction it) {
+        ASMBlock first = it.blocks.get(0);
+        ASMBlock last = it.blocks.get(it.blocks.size() - 1);
+        int stackCount = it.argsStack + it.spilledLength + it.allocaLength;
+        if (stackCount < (1 << 11)) {
+            first.insts.addFirst(new ASMITypeInst(PhyReg.phyRegMap.get("sp"), PhyReg.phyRegMap.get("sp"), new Imm(-stackCount), "addi"));
+            last.insts.add(new ASMITypeInst(PhyReg.phyRegMap.get("sp"), PhyReg.phyRegMap.get("sp"), new Imm(stackCount), "addi"));
+        }
+        else {
+            first.insts.addFirst(new ASMRTypeInst(PhyReg.phyRegMap.get("sp"), PhyReg.phyRegMap.get("sp"), PhyReg.phyRegMap.get("t0"), "add"));
+            first.insts.addFirst(new ASMLiInst(PhyReg.phyRegMap.get("t3"), new Imm(-stackCount)));
+            last.insts.add(new ASMLiInst(PhyReg.phyRegMap.get("t3"), new Imm(stackCount)));
+            last.insts.add(new ASMRTypeInst(PhyReg.phyRegMap.get("sp"), PhyReg.phyRegMap.get("sp"), PhyReg.phyRegMap.get("t0"), "add"));
+        }
+        last.insts.add(new ASMRetInst());
     }
 
     public void init(ASMFunction it) {
@@ -128,7 +144,7 @@ public class AdvancedRegAllocator {
                 initial.addAll(inst.getUse());
             }
         }
-        initial.remove(precolored);
+        initial.removeAll(precolored);
         for (var reg: initial) {
             adjList.put(reg, new HashSet<>());
             degree.put(reg, 0);
@@ -176,7 +192,7 @@ public class AdvancedRegAllocator {
             rewriteProgram(it);
         }
         for (var block: it.blocks) {
-            newInsts.clear();
+            newInsts = new LinkedList<>();//do not use clear, stupid java
             for (var inst: block.insts) {
                 if (inst.rs1 instanceof VirtualReg) {
                     inst.rs1 = PhyReg.phyRegId.get(color.get(inst.rs1));
@@ -217,11 +233,9 @@ public class AdvancedRegAllocator {
                 }
                 liveOut.addAll(inst.getDef());
                 //for building edges between all alive variable
-                for (var live: liveOut) {
-                    for (var def: inst.getDef()) {
-                        if (!live.equals(def)) {
-                            addEdge(live, def);
-                        }
+                for (var def: inst.getDef()) {
+                    for (var live: liveOut) {
+                        addEdge(live, def);
                     }
                 }
                 liveOut.removeAll(inst.getDef());
@@ -250,15 +264,15 @@ public class AdvancedRegAllocator {
     }
 
     public void makeWorklist() {
-        for (var nxt: initial) {
-            if (degree.get(nxt) >= K) {
-                spillWorklist.add(nxt);
+        for (var reg: initial) {
+            if (degree.get(reg) >= K) {
+                spillWorklist.add(reg);
             }
-            else if (moveRelated(nxt)) {
-                freezeWorklist.add(nxt);
+            else if (moveRelated(reg)) {
+                freezeWorklist.add(reg);
             }
             else {
-                simplifyWorklist.add(nxt);
+                simplifyWorklist.add(reg);
             }
         }
         initial.clear();
@@ -319,8 +333,8 @@ public class AdvancedRegAllocator {
 
     public boolean George(Reg x, Reg y) {
         boolean flag = true;
-        for (var adj: adjList.get(x)) {
-            flag = flag && (degree.get(adj) < K || adjSet.contains(new edge(x,y)));
+        for (var adj: adjList.get(y)) {
+            flag = flag && (degree.get(adj) < K || precolored.contains(adj) || adjSet.contains(new edge(adj, x)));
         }
         return flag;
     }
@@ -337,7 +351,7 @@ public class AdvancedRegAllocator {
     }
 
     public void addWorklist(Reg reg) {
-        if (!precolored.contains(reg) && !(moveRelated(reg) && degree.get(reg) < K)) {
+        if (!precolored.contains(reg) && !moveRelated(reg) && degree.get(reg) < K) {
             freezeWorklist.remove(reg);
             simplifyWorklist.add(reg);
             //not move related and low-degree -> simplify
@@ -361,10 +375,10 @@ public class AdvancedRegAllocator {
             //move inst constrained and can not be coalesced
         }
         else {
-            if ((precolored.contains(e.x) && Briggs(e.x, e.y)) || (!precolored.contains(e.x) && George(e.y, e.x))) {
+            if ((!precolored.contains(e.x) && Briggs(e.x, e.y)) || (precolored.contains(e.x) && George(e.y, e.x))) {
                 coalescedMoves.add(mvInst);
                 combine(e.x, e.y);
-                addWorklist(e.x);//why
+                addWorklist(e.x);//why?
             }
             else {
                 activeMoves.add(mvInst);
@@ -387,7 +401,7 @@ public class AdvancedRegAllocator {
         enableMoves(combined);
         for (var adj: adjacent(y)) {
             addEdge(adj, x);
-            decrementDegree(adj);//why?
+            decrementDegree(adj);
         }
         if (degree.get(x) >= K && freezeWorklist.contains(x)) {
             freezeWorklist.remove(x);
@@ -458,9 +472,8 @@ public class AdvancedRegAllocator {
             it.spilledLength += 4;
         }//allocate space on stack
         for (var block: it.blocks) {
-            newInsts.clear();
+            newInsts = new LinkedList<>();
             for (var inst: block.insts) {
-                VirtualReg resReg = null;
                 if (inst.rs1 != null && spilledNodes.contains(inst.rs1)) {
                     VirtualReg reg = new VirtualReg(32);
                     spilledTemp.add(reg);

@@ -18,7 +18,7 @@ public class ASMFunction {
     public ArrayList<ASMBlock> blocks = new ArrayList<>();
     public int argsStack = 0;
     public int spilledLength = 0;
-    public int allocaLength = 0;
+    public int allocaLength = 4;//for ra usage
 
     public ASMFunction(String name) {
         this.name = name;
