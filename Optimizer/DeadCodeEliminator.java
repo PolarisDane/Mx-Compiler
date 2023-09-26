@@ -51,7 +51,7 @@ public class DeadCodeEliminator {
                 continue;
             }
             IRBaseInst inst = def.get(reg);
-            if (inst instanceof IRCall) {
+            if (inst instanceof IRCall || inst == null) {
                 continue;
             }
             inst.isDead = true;
