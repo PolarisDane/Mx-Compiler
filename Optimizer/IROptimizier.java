@@ -13,6 +13,6 @@ public class IROptimizier {
         new Mem2Reg(program).optimize();
         new DeadCodeEliminator(program).eliminate();
         new ConstPropagation(program).propagate();
-        new BlockMerger(program).mergeBlock();
+//        new BlockMerger(program).mergeBlock();
     }
 }
