@@ -100,8 +100,8 @@ public class AdvancedRegAllocator {
         }
         else {
             first.insts.addFirst(new ASMRTypeInst(PhyReg.phyRegMap.get("sp"), PhyReg.phyRegMap.get("sp"), PhyReg.phyRegMap.get("t0"), "add"));
-            first.insts.addFirst(new ASMLiInst(PhyReg.phyRegMap.get("t3"), new Imm(-stackCount)));
-            last.insts.add(new ASMLiInst(PhyReg.phyRegMap.get("t3"), new Imm(stackCount)));
+            first.insts.addFirst(new ASMLiInst(PhyReg.phyRegMap.get("t0"), new Imm(-stackCount)));
+            last.insts.add(new ASMLiInst(PhyReg.phyRegMap.get("t0"), new Imm(stackCount)));
             last.insts.add(new ASMRTypeInst(PhyReg.phyRegMap.get("sp"), PhyReg.phyRegMap.get("sp"), PhyReg.phyRegMap.get("t0"), "add"));
         }
         last.insts.add(new ASMRetInst());
@@ -128,7 +128,6 @@ public class AdvancedRegAllocator {
         moveList.clear();
         alias.clear();
         color.clear();
-        spilledTemp.clear();
         for (var reg: PhyReg.phyRegMap.values()) {
             precolored.add(reg);
             adjList.put(reg, new HashSet<>());
@@ -171,6 +170,7 @@ public class AdvancedRegAllocator {
     }
 
     public void graphColoring(ASMFunction it) {
+        spilledTemp.clear();
         while(true) {
             new LivenessAnalyzer(it).analyze();
             init(it);
