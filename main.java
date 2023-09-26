@@ -42,7 +42,7 @@ public class main {
             IRBuilder irBuilder = new IRBuilder(gScope);
             irBuilder.visit(ASTRoot);
 //            System.out.println(irBuilder.program.toString());
-//            new IROptimizier(irBuilder.program).optimize();
+            new IROptimizier(irBuilder.program).optimize();
 //            System.out.println(irBuilder.program.toString());
             InstSelector instSelector = new InstSelector();
             instSelector.visit(irBuilder.program);
