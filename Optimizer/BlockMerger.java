@@ -31,10 +31,16 @@ public class BlockMerger {
             if (isDead.contains(nxt.label)) {
                 continue;
             }
+            if (!blockMap.containsKey(nxt.label)) {
+                blockMap.put(nxt.label, nxt);
+            }
             while (true) {
                 var inst = nxt.insts.getLast();
                 if (inst instanceof IRJump jump) {
                     var toBlock = it.blockMap.get(jump.label);
+                    if (toBlock.label.equals("return")) {
+                        break;
+                    }
                     if (toBlock.pred.size() == 1) {
                         nxt.insts.remove(inst);
                         nxt.insts.addAll(toBlock.insts);
@@ -59,10 +65,11 @@ public class BlockMerger {
                     break;
                 }
                 for (int i = 0; i < phi.fromBlock.size(); i++) {
-                    if (blockMap.containsKey(phi.fromBlock.get(i).label)) {
-                        phi.fromBlock.set(i, blockMap.get(phi.fromBlock.get(i).label));
-                        break;
+                    String replacement = phi.fromBlock.get(i).label;
+                    while (blockMap.containsKey(replacement) && !replacement.equals(blockMap.get(replacement).label)) {
+                        replacement = blockMap.get(replacement).label;
                     }
+                    phi.fromBlock.set(i, blockMap.get(replacement));
                 }
             }
             newBlocks.add(block);

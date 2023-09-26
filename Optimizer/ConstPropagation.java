@@ -51,6 +51,9 @@ public class ConstPropagation {
             if (constVal != null) {
                 inst.isDead = true;
                 for (var nxt : it.use.get(defVal)) {
+                    if (constVal instanceof IRRegister reg) {
+                        it.use.get(reg).add(nxt);
+                    }
                     replace(nxt, defVal, constVal);
                     if (!inQue.contains(nxt)) {
                         que.add(nxt);
@@ -105,6 +108,11 @@ public class ConstPropagation {
     public void removeBlock(BasicBlock it, Function inFunc) {
         for (var inst: it.insts) {
             inst.isDead = true;
+            for (var use: inst.getUse()) {
+                if (inFunc.use.get(use) != null) {
+                    inFunc.use.get(use).remove(inst);
+                }
+            }
         }
         inFunc.blocks.remove(it);
         for (var succ: it.succ) {

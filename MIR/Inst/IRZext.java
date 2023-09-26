@@ -45,7 +45,9 @@ public class IRZext extends IRBaseInst {
 
     @Override
     public Entity getConst() {
-        //should not be viable
+        if (val instanceof IRConst) {
+            return new IRBoolConst(((IRBoolConst) val).val, true);
+        }
         return null;
     }
 

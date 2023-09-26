@@ -65,6 +65,9 @@ public class IRBinaryOp extends IRBaseInst {
                     entity = new IRIntConst(((IRIntConst) op1).val / ((IRIntConst) op2).val);
                     break;
                 case "srem":
+                    if (((IRIntConst) op2).val == 0) {
+                        return null;
+                    }
                     entity = new IRIntConst(((IRIntConst) op1).val % ((IRIntConst) op2).val);
                     break;
                 case "and":
