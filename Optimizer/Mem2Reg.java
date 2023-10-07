@@ -36,7 +36,7 @@ public class Mem2Reg {
 //    public boolean isPromotable() {
 //
 //    }
-    //notice: parameters with index bigger than 8?
+//    //notice: parameters with index bigger than 8?
 
     public Entity finalReplace(IRRegister reg) {
         Entity res = reg;

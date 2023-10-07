@@ -252,7 +252,7 @@ public class InstSelector implements IRVisitor {
     @Override
     public void visit(IRPhi it) {
         VirtualReg res = new VirtualReg(32);
-        curBlock.insts.add(new ASMMvInst(getReg(it.res),res));
+        curBlock.insts.add(new ASMMvInst(getReg(it.res), res));
         for (int i = 0; i < it.val.size(); i++) {
             Entity val = it.val.get(i);
             if (val instanceof IRConst) {
